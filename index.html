@@ -96,38 +96,28 @@
           <div class="field"><label for="email">E-mail</label><input id="email" type="email" autocomplete="email" required placeholder="voce@email.com" /></div>
           <div class="field"><label for="password">Senha</label><input id="password" type="password" autocomplete="current-password" minlength="8" required placeholder="Mínimo de 8 caracteres" /></div>
           <div class="row"><button id="loginBtn" type="button">Entrar</button><button id="signupBtn" type="button" class="secondary">Criar conta</button></div>
-        </form><div id="authStatus" class="status">Configure as credenciais do Supabase no código para ativar login e banco de dados.</div>
+        </form><div id="authStatus" class="status">Entre com seu e-mail e senha ou crie sua conta.</div>
       </article>
       <article class="card"><div class="eyebrow">Transparência</div><h2>Feito para cuidar bem</h2><p>Os dados da conta são isolados por usuário no banco de dados. A administração é reservada a contas autorizadas pelo responsável.</p><ul class="benefit-list"><li>Cadastro e veículos vinculados à conta</li><li>Histórico de mensalidades e benefícios</li><li>Confirmação de pagamento pelo servidor</li></ul><div class="status">Os pagamentos são processados pelo Mercado Pago. Os dados do seu cartão são informados no ambiente do Mercado Pago, nunca neste app.</div></article>
     </section>
 
     <section id="dashboard" class="hidden">
-      <div class="section-head"><div><div class="eyebrow">Minha conta</div><h2 id="welcome">Olá!</h2><p id="profileSummary">Seu programa de fidelidade.</p></div><span id="rolePill" class="status">Cliente</span></div>
+      <div class="section-head"><div><div class="eyebrow">Minha conta</div><h2 id="welcome">Olá!</h2><p id="profileSummary">Seu programa de fidelidade.</p></div><div class="row"><a id="adminLink" href="./admin.html" class="hidden" style="color:var(--accentFg);font-weight:750">Abrir painel da oficina →</a><span id="rolePill" class="status" style="margin-top:0">Cliente</span></div></div>
       <div class="dash-grid"><article class="card"><span class="small">Plano atual</span><div class="metric" id="currentPlan">—</div><p id="subStatus">Nenhuma assinatura ativa</p><button id="cancelSubBtn" type="button" class="secondary hidden">Cancelar assinatura</button></article><article class="card"><span class="small">Tempo de fidelidade</span><div class="metric" id="monthsActive">0 dias</div><p>Benefícios liberam por carência e renovam a cada ciclo.</p></article><article class="card"><span class="small">Benefícios disponíveis</span><div class="metric" id="benefitCount">0</div><p>Liberação calculada pelo servidor</p></article></div>
       <article id="noticeBox" class="card hidden"><h2>Avisos</h2><div id="noticeList"></div><button id="readNoticesBtn" type="button" class="secondary">Marcar como lidos</button></article>
       <div class="section-head"><div><h2>Meus benefícios</h2></div></div>
       <div id="benefitsStatus" class="status">Seus benefícios aparecem aqui quando a assinatura estiver ativa.</div>
       <div id="benefitsList" class="bgrid"></div>
       <div class="auth"><article class="card"><h2>Meu veículo</h2><form id="vehicleForm"><div class="field"><label for="vehicleName">Marca e modelo</label><input id="vehicleName" required placeholder="Ex.: VW Nivus" /></div><div class="field"><label for="vehiclePlate">Placa</label><input id="vehiclePlate" required maxlength="8" placeholder="ABC1D23" autocapitalize="characters" /></div><div class="field"><label for="vehicleColor">Cor</label><input id="vehicleColor" placeholder="Cor do veículo" /></div><button type="submit">Salvar veículo</button></form><div id="vehicleStatus" class="status">Seus veículos aparecerão aqui.</div><div id="vehicleList"></div></article><article class="card"><h2>Mensalidades</h2><div id="paymentsList"></div><div id="paymentsStatus" class="status">Nenhum pagamento disponível.</div></article></div>
-      <section id="adminSection" class="hidden">
-        <div class="section-head"><div><div class="eyebrow">Acesso restrito</div><h2>Painel da oficina</h2></div><button id="refreshBtn" type="button" class="secondary">Atualizar</button></div>
-        <div class="dash-grid"><article class="card"><span class="small">Receita recorrente</span><div class="metric" id="admMrr">—</div></article><article class="card"><span class="small">Assinaturas</span><div class="metric" id="admSubs">—</div><p class="small" id="admSubsNote"></p></article><article class="card"><span class="small">Resgates (30 dias)</span><div class="metric" id="admRed">—</div><p class="small" id="admCost"></p></article></div>
-        <div class="auth">
-          <article class="card"><h2>Dar baixa em código</h2><div class="field"><label for="redeemCode">Código informado pelo cliente</label><input id="redeemCode" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="off" /></div><button id="redeemBtn" type="button">Validar e dar baixa</button><div id="redeemStatus" class="status">Informe o código de 6 dígitos mostrado no app do cliente.</div></article>
-          <article class="card"><h2>Consultar por placa</h2><div class="field"><label for="plateSearch">Placa do veículo</label><input id="plateSearch" maxlength="8" placeholder="ABC1D23" autocapitalize="characters" autocomplete="off" /></div><button id="plateBtn" type="button" class="secondary">Buscar</button><div id="plateStatus" class="status">Veja plano, situação e benefícios disponíveis agora.</div></article>
-        </div>
-        <article class="card" style="margin-top:16px"><h2>Custo dos benefícios por plano</h2><p class="small">Custo mensal estimado = custo de cada benefício dividido pelo ciclo, comparado ao teto do plano.</p><div class="table-wrap"><table><thead><tr><th>Plano</th><th>Mensalidade</th><th>Custo/mês</th><th>% da mensalidade</th><th>Teto</th></tr></thead><tbody id="costTable"></tbody></table></div></article>
-        <article class="card" style="margin-top:16px"><h2>Planos</h2><div id="planEditor"></div></article>
-        <article class="card" style="margin-top:16px"><h2>Benefícios</h2><div id="benefitEditor"></div><h2 style="margin-top:20px">Novo benefício</h2><div class="editrow"><div class="field"><label for="nbPlan">Plano</label><select id="nbPlan"></select></div><div class="field"><label for="nbName">Nome</label><input id="nbName" /></div><div class="field"><label for="nbUnlock">Carência (dias)</label><input id="nbUnlock" type="number" min="0" value="0" /></div><div class="field"><label for="nbCycle">Ciclo (dias)</label><input id="nbCycle" type="number" min="1" value="30" /></div><div class="field"><label for="nbCost">Custo (R$)</label><input id="nbCost" type="number" min="0" step="0.01" value="0" /></div></div><button id="nbBtn" type="button">Adicionar benefício</button><div id="adminStatus" class="status">Alterações são salvas diretamente no banco.</div></article>
-      </section>
     </section>
     <footer>LINHAGEM AUTOMOTIVA · Programa de fidelidade</footer>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4"></script>
+  <script src="./config.js"></script>
   <script>
-    // Cole aqui a URL do seu projeto e a chave anon/publishable. Nunca use service_role no navegador.
-    const SUPABASE_URL = 'https://knvzkdimamyfrtwrceoj.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_YP5VRbMhpWnxc7_Ms-9fKg_jkqKYGpS';
+    // As chaves do Supabase ficam no arquivo config.js (um só lugar para os dois painéis).
+    const CFG = window.APP_CONFIG || {};
+    const SUPABASE_URL = CFG.SUPABASE_URL || '', SUPABASE_ANON_KEY = CFG.SUPABASE_ANON_KEY || '';
     const configured = SUPABASE_URL.startsWith('https://') && !SUPABASE_URL.includes('COLE_') && !SUPABASE_ANON_KEY.includes('COLE_');
     const $ = id => document.getElementById(id);
     const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
@@ -228,7 +218,7 @@
       const profile = await getProfile(user);
       $('authCard').classList.add('hidden'); $('dashboard').classList.remove('hidden'); $('signOutBtn').classList.remove('hidden');
       $('sessionLabel').textContent = user.email || 'Conta conectada'; $('welcome').textContent = 'Olá, ' + (profile.full_name || 'cliente') + '!'; $('profileSummary').textContent = user.email || '';
-      $('rolePill').textContent = profile.role === 'admin' ? 'Administrador' : 'Cliente'; $('adminSection').classList.toggle('hidden', profile.role !== 'admin');
+      $('rolePill').textContent = profile.role === 'admin' ? 'Administrador' : 'Cliente'; $('adminLink').classList.toggle('hidden', profile.role !== 'admin');
 
       const { data: subs, error: subsError } = await client.from('subscriptions').select('id,status,started_at,vehicle_id,plans(name,monthly_price_cents)').order('created_at', { ascending: false }).limit(1);
       if (subsError) throw subsError;
@@ -279,7 +269,6 @@
       else if (!payments.length) status('paymentsStatus', 'Nenhum pagamento disponível.');
       else { $('paymentsStatus').classList.add('hidden'); payments.forEach(p => pl.appendChild(el('div', 'status', money(p.amount_cents) + ' · ' + p.status + (p.paid_at ? ' · ' + new Date(p.paid_at).toLocaleDateString('pt-BR') : '')))); }
 
-      if (profile.role === 'admin') await loadAdmin();
     }
     async function refreshCurrent() {
       if (!client) return; const { data: { user } } = await client.auth.getUser();
@@ -293,79 +282,9 @@
       });
     }, 1000);
 
-    // ---------- Administração ----------
-    function numInput(label, value, step, min) {
-      const f = el('div', 'field'); f.appendChild(el('label', null, label));
-      const i = el('input'); i.type = 'number'; i.value = value; i.step = step || '1'; i.min = min != null ? min : '0'; f.appendChild(i); return [f, i];
-    }
-    function textInput(label, value) { const f = el('div', 'field'); f.appendChild(el('label', null, label)); const i = el('input'); i.value = value; f.appendChild(i); return [f, i]; }
-    function checkInput(label, value) { const f = el('div', 'field'); f.appendChild(el('label', null, label)); const i = el('input'); i.type = 'checkbox'; i.checked = value; i.style.width = 'auto'; f.appendChild(i); return [f, i]; }
-    async function loadAdmin() {
-      const [dash, report, plans, bens] = await Promise.all([
-        client.rpc('admin_dashboard'), client.rpc('plan_cost_report'),
-        client.from('plans').select('id,code,name,monthly_price_cents,grace_days,active').order('monthly_price_cents'),
-        client.from('benefits').select('id,name,unlock_days,cycle_days,active,plan_id,plans(name),benefit_costs(estimated_cost_cents)').order('plan_id').order('unlock_days')
-      ]);
-      const d = dash.data && dash.data[0];
-      if (d) {
-        $('admMrr').textContent = money(Number(d.out_mrr_cents)); $('admSubs').textContent = d.out_active + ' ativas';
-        $('admSubsNote').textContent = d.out_past_due + ' em atraso'; $('admRed').textContent = d.out_redemptions_30d;
-        $('admCost').textContent = 'Custo estimado: ' + money(Number(d.out_cost_30d_cents));
-      } else if (dash.error) status('adminStatus', friendly(dash.error), 'error');
-      const tb = $('costTable'); clear(tb);
-      (report.data || []).forEach(r => {
-        const tr = el('tr'); [r.out_name, money(r.out_price_cents), money(r.out_monthly_cost_cents), r.out_percent + '%', r.out_cap + '%' + (r.out_over_cap ? ' · acima do teto' : '')].forEach((t, i) => { const td = el('td', i === 4 && r.out_over_cap ? 'over' : null, t); tr.appendChild(td); });
-        tb.appendChild(tr);
-      });
-      const pe = $('planEditor'); clear(pe);
-      (plans.data || []).forEach(p => {
-        const row = el('div', 'editrow'); const [f1, price] = numInput('Mensalidade (R$) · ' + p.name, (p.monthly_price_cents / 100).toFixed(2), '0.01', '0.01');
-        const [f2, grace] = numInput('Tolerância de atraso (dias)', p.grace_days, '1', '0'); const [f3, act] = checkInput('Ativo', p.active);
-        const btn = el('button', 'secondary', 'Salvar'); btn.type = 'button';
-        btn.addEventListener('click', async () => { const { error } = await client.from('plans').update({ monthly_price_cents: Math.round(parseFloat(price.value) * 100), grace_days: parseInt(grace.value, 10), active: act.checked }).eq('id', p.id); status('adminStatus', error ? friendly(error) : 'Plano ' + p.name + ' salvo.', error ? 'error' : 'success'); if (!error) loadAdmin(); });
-        row.append(f1, f2, f3, btn); pe.appendChild(row);
-      });
-      const np = $('nbPlan'); clear(np); (plans.data || []).forEach(p => { const o = el('option', null, p.name); o.value = p.id; np.appendChild(o); });
-      const be = $('benefitEditor'); clear(be);
-      (bens.data || []).forEach(b => {
-        const row = el('div', 'editrow'); const cost = b.benefit_costs ? (Array.isArray(b.benefit_costs) ? b.benefit_costs[0] : b.benefit_costs) : null;
-        const [f0, name] = textInput((b.plans?.name || '') + ' · nome', b.name); const [f1, ud] = numInput('Carência (dias)', b.unlock_days); const [f2, cd] = numInput('Ciclo (dias)', b.cycle_days, '1', '1');
-        const [f3, cs] = numInput('Custo (R$)', ((cost?.estimated_cost_cents || 0) / 100).toFixed(2), '0.01'); const [f4, act] = checkInput('Ativo', b.active);
-        const btn = el('button', 'secondary', 'Salvar'); btn.type = 'button';
-        btn.addEventListener('click', async () => {
-          const r1 = await client.from('benefits').update({ name: name.value.trim(), unlock_days: parseInt(ud.value, 10), cycle_days: parseInt(cd.value, 10), active: act.checked }).eq('id', b.id);
-          const r2 = r1.error ? r1 : await client.from('benefit_costs').upsert({ benefit_id: b.id, estimated_cost_cents: Math.round(parseFloat(cs.value) * 100) });
-          status('adminStatus', r2.error ? friendly(r2.error) : 'Benefício salvo.', r2.error ? 'error' : 'success'); if (!r2.error) loadAdmin();
-        });
-        row.append(f0, f1, f2, f3, f4, btn); be.appendChild(row);
-      });
-    }
-    $('redeemBtn').addEventListener('click', async () => {
-      const code = $('redeemCode').value.trim(); if (!/^[0-9]{6}$/.test(code)) { status('redeemStatus', 'Digite os 6 dígitos do código.', 'error'); return; }
-      const { data, error } = await client.rpc('redeem_code', { p_code: code });
-      if (error) { status('redeemStatus', friendly(error), 'error'); return; }
-      const r = data[0]; $('redeemCode').value = ''; status('redeemStatus', 'Baixa realizada: ' + r.out_benefit + ' · ' + (r.out_customer || 'cliente') + ' · ' + (r.out_model || '') + ' ' + (r.out_plate || ''), 'success'); loadAdmin();
-    });
-    $('plateBtn').addEventListener('click', async () => {
-      const plate = normPlate($('plateSearch').value); if (!PLATE.test(plate)) { status('plateStatus', 'Placa inválida. Use o formato ABC1D23 ou ABC1234.', 'error'); return; }
-      const { data, error } = await client.rpc('admin_find_by_plate', { p_plate: plate });
-      if (error) { status('plateStatus', friendly(error), 'error'); return; }
-      if (!data.length) { status('plateStatus', 'Nenhum cliente com essa placa.', 'error'); return; }
-      const r = data[0]; const av = r.out_available && r.out_available.length ? r.out_available.join(', ') : 'nenhum';
-      status('plateStatus', r.out_customer + ' · ' + r.out_model + ' · ' + (r.out_plan || 'sem plano') + ' (' + (r.out_status || '—') + '). Disponíveis agora: ' + av + '.', 'success');
-    });
-    $('nbBtn').addEventListener('click', async () => {
-      const name = $('nbName').value.trim(); if (!name) { status('adminStatus', 'Informe o nome do benefício.', 'error'); return; }
-      const { data, error } = await client.from('benefits').insert({ plan_id: $('nbPlan').value, name, unlock_days: parseInt($('nbUnlock').value, 10) || 0, cycle_days: Math.max(1, parseInt($('nbCycle').value, 10) || 30) }).select('id').single();
-      if (error) { status('adminStatus', friendly(error), 'error'); return; }
-      const c = await client.from('benefit_costs').insert({ benefit_id: data.id, estimated_cost_cents: Math.round(parseFloat($('nbCost').value || '0') * 100) });
-      status('adminStatus', c.error ? friendly(c.error) : 'Benefício adicionado.', c.error ? 'error' : 'success'); $('nbName').value = ''; loadAdmin();
-    });
-    $('refreshBtn').addEventListener('click', () => refreshCurrent());
-
     // ---------- Autenticação e veículos ----------
     async function runAuth(mode) {
-      if (!client) { status('authStatus', 'Ainda não configurado. Crie um projeto Supabase, execute os SQLs e preencha SUPABASE_URL e SUPABASE_ANON_KEY neste arquivo.', 'error'); return; }
+      if (!client) { status('authStatus', 'Ainda não configurado. Preencha o arquivo config.js com a URL e a chave do Supabase.', 'error'); return; }
       const email = $('email').value.trim().toLowerCase(), password = $('password').value;
       try {
         let result;

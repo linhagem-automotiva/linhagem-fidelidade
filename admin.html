@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0E0F11">
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="manifest" href="./admin.webmanifest">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <title>Painel da oficina | Linhagem Automotiva</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0E0F11; --surface:#17181B; --surface2:#222428; --text:#F4F4F5; --muted:#A9ADB4; --line:#34363B; --accent:#D90000; --accentFg:#FF4A4A; --ok:#6FD08C; --danger:#FFC857; --nav:64px; }
+    * { box-sizing:border-box; }
+    html { -webkit-text-size-adjust:100%; }
+    body { margin:0; background:var(--bg); color:var(--text); font:16px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    button,input,select { font:inherit; }
+    button { cursor:pointer; border:0; border-radius:12px; padding:13px 18px; background:var(--accent); color:#fff; font-weight:750; min-height:46px; }
+    button.secondary { background:var(--surface2); color:var(--text); border:1px solid var(--line); }
+    button:disabled { opacity:.5; cursor:not-allowed; }
+    button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
+    .hidden { display:none!important; }
+    h2 { letter-spacing:-.02em; margin:0 0 8px; font-size:1.25rem; }
+    p { color:var(--muted); margin:0 0 14px; }
+    .small { font-size:.84rem; color:var(--muted); }
+    .eyebrow { color:var(--accentFg); font-size:.74rem; letter-spacing:.17em; font-weight:800; text-transform:uppercase; }
+
+    /* Topo */
+    .top { position:sticky; top:0; z-index:20; background:#0E0F11ee; backdrop-filter:blur(8px); border-bottom:1px solid var(--line); padding:calc(8px + env(safe-area-inset-top,0px)) 16px 8px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .brand { display:flex; align-items:center; gap:12px; min-width:0; }
+    .brand img { height:38px; width:auto; display:block; }
+    .brand .tt { line-height:1.15; }
+    .brand .tt strong { display:block; font-size:.95rem; letter-spacing:.02em; }
+    .who { display:flex; align-items:center; gap:10px; min-width:0; }
+    .who span { max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .who button { padding:8px 14px; min-height:38px; }
+
+    /* Navegação: barra inferior no celular, abas no topo no computador */
+    nav.tabs { position:fixed; left:0; right:0; bottom:0; z-index:30; display:grid; grid-template-columns:repeat(4,1fr); background:#121316; border-top:1px solid var(--line); padding-bottom:env(safe-area-inset-bottom,0px); }
+    nav.tabs button { background:transparent; color:var(--muted); border-radius:0; min-height:var(--nav); padding:8px 4px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; font-size:.78rem; font-weight:700; }
+    nav.tabs button .ic { font-size:1.3rem; line-height:1; }
+    nav.tabs button.on { color:var(--text); box-shadow:inset 0 3px 0 var(--accent); background:var(--surface); }
+    main { max-width:1100px; margin:auto; padding:18px 16px calc(var(--nav) + 36px + env(safe-area-inset-bottom,0px)); }
+    @media (min-width:900px) {
+      nav.tabs { position:static; max-width:1100px; margin:14px auto 0; padding:0 16px; display:flex; gap:8px; border:0; background:transparent; }
+      nav.tabs button { flex-direction:row; gap:8px; min-height:44px; padding:10px 18px; border-radius:12px; font-size:.95rem; border:1px solid var(--line); background:var(--surface); }
+      nav.tabs button.on { box-shadow:none; background:var(--accent); color:#fff; border-color:var(--accent); }
+      main { padding-bottom:40px; }
+    }
+
+    /* Cartões e grades */
+    .card { background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:20px; min-width:0; }
+    .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+    .grid3 { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-bottom:16px; }
+    @media (max-width:760px) { .grid2,.grid3 { grid-template-columns:1fr; } }
+    .metric { font-size:1.8rem; font-weight:800; margin-top:4px; }
+    .field { display:grid; gap:6px; margin:12px 0; }
+    label { font-size:.88rem; color:var(--muted); }
+    input,select { width:100%; min-width:0; border:1px solid var(--line); background:#101113; color:var(--text); border-radius:10px; padding:13px; }
+    input.big { font:800 2rem/1 ui-monospace,Menlo,monospace; letter-spacing:.35em; text-align:center; padding:16px 8px; }
+    input.plate { font-weight:800; letter-spacing:.12em; text-transform:uppercase; text-align:center; font-size:1.3rem; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .row.between { justify-content:space-between; }
+    .full { width:100%; }
+    .status { padding:11px 13px; border-radius:10px; background:var(--surface2); color:var(--muted); margin-top:12px; font-size:.92rem; overflow-wrap:anywhere; }
+    .status.error { color:var(--danger); }
+    .status.success { color:var(--ok); }
+    .result { border:2px solid var(--ok); border-radius:14px; padding:14px; margin-top:12px; background:#0f1d14; }
+    .result strong { color:var(--ok); display:block; font-size:1.05rem; }
+    .tag { font-size:.76rem; font-weight:750; padding:3px 10px; border-radius:99px; border:1px solid currentColor; white-space:nowrap; }
+    .tag.ok { color:var(--ok); } .tag.warn { color:var(--danger); } .tag.mute { color:var(--muted); }
+    .item { border-top:1px solid var(--line); padding:12px 0; }
+    .item:first-child { border-top:0; }
+    .item .t { font-weight:700; }
+    .table-wrap { overflow:auto; }
+    table { width:100%; border-collapse:collapse; min-width:460px; }
+    th,td { text-align:left; padding:11px 9px; border-bottom:1px solid var(--line); font-size:.9rem; }
+    th { color:var(--muted); font-weight:650; }
+    td.over { color:var(--danger); font-weight:700; }
+    .editrow { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; align-items:end; border-bottom:1px solid var(--line); padding:12px 0; }
+    .editrow .field { margin:0; }
+    a { color:var(--accentFg); }
+
+    /* Login */
+    .login { max-width:420px; margin:8vh auto 0; padding:0 16px; }
+    .login .card { padding:26px; }
+    .login img { height:56px; display:block; margin:0 auto 18px; }
+    footer { text-align:center; color:var(--muted); font-size:.8rem; padding:6px 16px 20px; }
+  </style>
+</head>
+<body>
+
+  <!-- ============ LOGIN ============ -->
+  <section id="loginView" class="login">
+    <div class="card">
+      <img src="./logo.png" alt="Linhagem Automotiva" width="163" height="56">
+      <div class="eyebrow" style="text-align:center">Acesso restrito</div>
+      <h2 style="text-align:center">Painel da oficina</h2>
+      <form id="loginForm" autocomplete="on">
+        <div class="field"><label for="email">E-mail</label><input id="email" type="email" autocomplete="username" required inputmode="email" placeholder="voce@email.com"></div>
+        <div class="field"><label for="password">Senha</label><input id="password" type="password" autocomplete="current-password" required minlength="8" placeholder="Sua senha"></div>
+        <button id="loginBtn" type="submit" class="full">Entrar</button>
+      </form>
+      <div id="loginStatus" class="status">Somente contas de administrador acessam esta página.</div>
+      <p class="small" style="margin-top:14px;text-align:center">Cliente? <a href="./index.html">Ir para a área do cliente</a></p>
+    </div>
+  </section>
+
+  <!-- ============ PAINEL ============ -->
+  <div id="appView" class="hidden">
+    <header class="top">
+      <div class="brand"><img src="./logo.png" alt="Linhagem Automotiva" width="110" height="38"><div class="tt"><strong>Painel da oficina</strong><span class="small" id="today"></span></div></div>
+      <div class="who"><span class="small" id="whoLabel"></span><button id="signOutBtn" class="secondary" type="button">Sair</button></div>
+    </header>
+
+    <nav class="tabs" id="tabs" aria-label="Seções do painel">
+      <button type="button" data-tab="balcao" class="on"><span class="ic">🔑</span>Balcão</button>
+      <button type="button" data-tab="clientes"><span class="ic">👥</span>Clientes</button>
+      <button type="button" data-tab="resumo"><span class="ic">📊</span>Resumo</button>
+      <button type="button" data-tab="ajustes"><span class="ic">⚙️</span>Ajustes</button>
+    </nav>
+
+    <main>
+      <!-- BALCÃO -->
+      <section id="tab-balcao">
+        <div class="grid2">
+          <article class="card">
+            <div class="eyebrow">Atendimento</div>
+            <h2>Dar baixa em código</h2>
+            <p class="small">Peça ao cliente o código de 6 dígitos que aparece no app dele (vale 10 minutos).</p>
+            <div class="field"><label for="redeemCode">Código do cliente</label><input id="redeemCode" class="big" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="······" autocomplete="off"></div>
+            <button id="redeemBtn" type="button" class="full">Validar e dar baixa</button>
+            <div id="redeemStatus" class="status">Digite os 6 dígitos e confirme.</div>
+          </article>
+          <article class="card">
+            <div class="eyebrow">Consulta</div>
+            <h2>Buscar por placa</h2>
+            <p class="small">Veja o plano, a situação e o que o cliente pode usar agora.</p>
+            <div class="field"><label for="plateSearch">Placa</label><input id="plateSearch" class="plate" maxlength="8" placeholder="ABC1D23" autocapitalize="characters" autocomplete="off"></div>
+            <button id="plateBtn" type="button" class="secondary full">Buscar</button>
+            <div id="plateStatus" class="status">Informe a placa do veículo.</div>
+          </article>
+        </div>
+        <article class="card">
+          <div class="row between"><div><div class="eyebrow">Histórico</div><h2>Últimas baixas</h2></div><button id="reloadRed" type="button" class="secondary">Atualizar</button></div>
+          <div id="recentList"></div>
+          <div id="recentStatus" class="status">Carregando...</div>
+        </article>
+      </section>
+
+      <!-- CLIENTES -->
+      <section id="tab-clientes" class="hidden">
+        <article class="card">
+          <div class="row between"><div><div class="eyebrow">Carteira</div><h2>Clientes com assinatura</h2></div><button id="reloadCli" type="button" class="secondary">Atualizar</button></div>
+          <div class="field"><label for="cliSearch">Filtrar por nome, placa, plano ou situação</label><input id="cliSearch" placeholder="Digite para filtrar" autocomplete="off"></div>
+          <div id="cliList"></div>
+          <div id="cliStatus" class="status">Abra esta aba para carregar.</div>
+        </article>
+      </section>
+
+      <!-- RESUMO -->
+      <section id="tab-resumo" class="hidden">
+        <div class="row between" style="margin-bottom:12px"><div><div class="eyebrow">Números do negócio</div><h2 style="margin:0">Resumo</h2></div><button id="reloadSum" type="button" class="secondary">Atualizar</button></div>
+        <div class="grid3">
+          <article class="card"><span class="small">Receita recorrente (mês)</span><div class="metric" id="admMrr">—</div></article>
+          <article class="card"><span class="small">Assinaturas</span><div class="metric" id="admSubs">—</div><p class="small" id="admSubsNote" style="margin:0"></p></article>
+          <article class="card"><span class="small">Baixas nos últimos 30 dias</span><div class="metric" id="admRed">—</div><p class="small" id="admCost" style="margin:0"></p></article>
+        </div>
+        <article class="card">
+          <h2>Custo dos benefícios por plano</h2>
+          <p class="small">Custo mensal estimado = custo de cada benefício dividido pelo ciclo, comparado com a mensalidade e o teto do plano.</p>
+          <div class="table-wrap"><table><thead><tr><th>Plano</th><th>Mensalidade</th><th>Custo/mês</th><th>% da mensalidade</th><th>Teto</th></tr></thead><tbody id="costTable"></tbody></table></div>
+          <div id="sumStatus" class="status hidden"></div>
+        </article>
+      </section>
+
+      <!-- AJUSTES -->
+      <section id="tab-ajustes" class="hidden">
+        <article class="card" style="margin-bottom:16px"><div class="eyebrow">Configuração</div><h2>Planos</h2><p class="small">Mudar a mensalidade vale para novas assinaturas. Quem já assina continua com o valor contratado.</p><div id="planEditor"></div></article>
+        <article class="card">
+          <h2>Benefícios</h2><div id="benefitEditor"></div>
+          <h2 style="margin-top:22px">Novo benefício</h2>
+          <div class="editrow">
+            <div class="field"><label for="nbPlan">Plano</label><select id="nbPlan"></select></div>
+            <div class="field"><label for="nbName">Nome</label><input id="nbName"></div>
+            <div class="field"><label for="nbUnlock">Carência (dias)</label><input id="nbUnlock" type="number" min="0" value="0" inputmode="numeric"></div>
+            <div class="field"><label for="nbCycle">Ciclo (dias)</label><input id="nbCycle" type="number" min="1" value="30" inputmode="numeric"></div>
+            <div class="field"><label for="nbCost">Custo (R$)</label><input id="nbCost" type="number" min="0" step="0.01" value="0" inputmode="decimal"></div>
+          </div>
+          <button id="nbBtn" type="button">Adicionar benefício</button>
+          <div id="adminStatus" class="status">As alterações são salvas direto no banco.</div>
+        </article>
+      </section>
+      <footer>LINHAGEM AUTOMOTIVA · Painel da oficina · <a href="./index.html">Área do cliente</a></footer>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4"></script>
+  <script src="./config.js"></script>
+  <script>
+    const CFG = window.APP_CONFIG || {};
+    const configured = typeof CFG.SUPABASE_URL === 'string' && CFG.SUPABASE_URL.startsWith('https://') && !CFG.SUPABASE_URL.includes('COLE_') && !String(CFG.SUPABASE_ANON_KEY || '').includes('COLE_') && !!CFG.SUPABASE_ANON_KEY;
+    const client = (configured && window.supabase) ? window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY) : null;
+
+    const $ = id => document.getElementById(id);
+    const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+    const clear = n => { while (n.firstChild) n.removeChild(n.firstChild); };
+    const status = (id, message, type = '') => { const e = $(id); e.textContent = message; e.className = 'status' + (type ? ' ' + type : ''); };
+    const PLATE = /^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/;
+    const normPlate = v => (v || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const money = cents => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((cents || 0) / 100);
+    const dt = v => v ? new Date(v).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';
+    const ERR = {
+      CODE_INVALID_OR_EXPIRED: 'Código inválido, expirado ou já utilizado.',
+      BENEFIT_NOT_AVAILABLE: 'Este benefício não está disponível (ciclo já usado ou mensalidade em atraso).',
+      FORBIDDEN: 'Ação permitida apenas para administradores.'
+    };
+    const friendly = e => { const m = (e && e.message) || ''; for (const k in ERR) if (m.includes(k)) return ERR[k]; return m || 'Erro inesperado.'; };
+    const STATUS_PT = { pending: 'Aguardando pagamento', active: 'Ativa', past_due: 'Em atraso', paused: 'Pausada', cancelled: 'Cancelada', expired: 'Expirada' };
+    const STATUS_CLS = { active: 'ok', past_due: 'warn', pending: 'warn', paused: 'warn', cancelled: 'mute', expired: 'mute' };
+
+    // ---------- Acesso ----------
+    async function enter(user) {
+      const { data: profile, error } = await client.from('profiles').select('full_name,role').eq('id', user.id).single();
+      if (error || !profile || profile.role !== 'admin') {
+        await client.auth.signOut();
+        $('appView').classList.add('hidden'); $('loginView').classList.remove('hidden');
+        status('loginStatus', 'Acesso restrito: esta conta não é de administrador.', 'error');
+        return false;
+      }
+      $('loginView').classList.add('hidden'); $('appView').classList.remove('hidden');
+      $('whoLabel').textContent = profile.full_name || user.email || '';
+      $('today').textContent = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
+      showTab('balcao');
+      return true;
+    }
+    $('loginForm').addEventListener('submit', async ev => {
+      ev.preventDefault();
+      if (!client) { status('loginStatus', 'App ainda não configurado: preencha o arquivo config.js com a URL e a chave do Supabase.', 'error'); return; }
+      $('loginBtn').disabled = true; status('loginStatus', 'Entrando...');
+      try {
+        const { data, error } = await client.auth.signInWithPassword({ email: $('email').value.trim().toLowerCase(), password: $('password').value });
+        if (error) throw error;
+        $('password').value = '';
+        await enter(data.user);
+      } catch (e) { status('loginStatus', e.message === 'Invalid login credentials' ? 'E-mail ou senha incorretos.' : (e.message || 'Não foi possível entrar.'), 'error'); }
+      $('loginBtn').disabled = false;
+    });
+    $('signOutBtn').addEventListener('click', async () => {
+      if (client) await client.auth.signOut();
+      $('appView').classList.add('hidden'); $('loginView').classList.remove('hidden'); status('loginStatus', 'Você saiu do painel.');
+    });
+
+    // ---------- Abas ----------
+    const loaded = {};
+    function showTab(name) {
+      ['balcao', 'clientes', 'resumo', 'ajustes'].forEach(t => $('tab-' + t).classList.toggle('hidden', t !== name));
+      document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
+      window.scrollTo({ top: 0 });
+      if (name === 'balcao') loadRecent();
+      if (name === 'clientes' && !loaded.cli) { loaded.cli = true; loadClients(); }
+      if (name === 'resumo') loadSummary();
+      if (name === 'ajustes' && !loaded.aj) { loaded.aj = true; loadSettings(); }
+    }
+    $('tabs').addEventListener('click', e => { const b = e.target.closest('button[data-tab]'); if (b) showTab(b.dataset.tab); });
+
+    // ---------- Balcão ----------
+    async function doRedeem() {
+      const code = $('redeemCode').value.trim();
+      if (!/^[0-9]{6}$/.test(code)) { status('redeemStatus', 'Digite os 6 dígitos do código.', 'error'); return; }
+      $('redeemBtn').disabled = true;
+      const { data, error } = await client.rpc('redeem_code', { p_code: code });
+      $('redeemBtn').disabled = false;
+      if (error) { status('redeemStatus', friendly(error), 'error'); return; }
+      const r = data[0]; $('redeemCode').value = '';
+      const box = $('redeemStatus'); box.className = 'result'; clear(box);
+      box.append(el('strong', null, '✓ Baixa realizada'), el('div', null, r.out_benefit), el('div', 'small', (r.out_customer || 'Cliente') + ' · ' + (r.out_model || '') + ' ' + (r.out_plate || '')));
+      loadRecent();
+    }
+    $('redeemBtn').addEventListener('click', doRedeem);
+    $('redeemCode').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); doRedeem(); } });
+    $('redeemCode').addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6); });
+
+    async function doPlate() {
+      const plate = normPlate($('plateSearch').value);
+      if (!PLATE.test(plate)) { status('plateStatus', 'Placa inválida. Use o formato ABC1D23 ou ABC1234.', 'error'); return; }
+      const { data, error } = await client.rpc('admin_find_by_plate', { p_plate: plate });
+      if (error) { status('plateStatus', friendly(error), 'error'); return; }
+      if (!data.length) { status('plateStatus', 'Nenhum cliente com essa placa.', 'error'); return; }
+      const r = data[0];
+      const box = $('plateStatus'); box.className = 'result'; clear(box);
+      box.append(el('strong', null, r.out_customer || 'Cliente'));
+      box.append(el('div', null, (r.out_model || '') + ' · ' + r.out_plate));
+      if (r.out_phone) { const p = el('div', 'small'); const a = el('a', null, r.out_phone); a.href = 'tel:' + r.out_phone.replace(/[^0-9+]/g, ''); p.append('Telefone: ', a); box.append(p); }
+      box.append(el('div', 'small', 'Plano: ' + (r.out_plan || 'sem plano') + ' · ' + (STATUS_PT[r.out_status] || r.out_status || '—')));
+      box.append(el('div', null, 'Disponíveis agora: ' + (r.out_available && r.out_available.length ? r.out_available.join(', ') : 'nenhum')));
+    }
+    $('plateBtn').addEventListener('click', doPlate);
+    $('plateSearch').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); doPlate(); } });
+
+    async function loadRecent() {
+      const { data, error } = await client.from('benefit_redemptions')
+        .select('id,redeemed_at,benefits(name),vehicles(plate,make_model),subscriptions(profiles(full_name))')
+        .order('redeemed_at', { ascending: false }).limit(10);
+      const list = $('recentList'); clear(list);
+      if (error) { status('recentStatus', 'Não foi possível carregar: ' + error.message, 'error'); return; }
+      if (!data.length) { status('recentStatus', 'Nenhuma baixa registrada ainda.'); return; }
+      $('recentStatus').className = 'hidden';
+      data.forEach(r => {
+        const it = el('div', 'item'); const top = el('div', 'row between');
+        top.append(el('span', 't', r.benefits?.name || 'Benefício'), el('span', 'small', dt(r.redeemed_at)));
+        it.append(top, el('div', 'small', (r.subscriptions?.profiles?.full_name || 'Cliente') + (r.vehicles ? ' · ' + r.vehicles.make_model + ' ' + r.vehicles.plate : '')));
+        list.appendChild(it);
+      });
+    }
+    $('reloadRed').addEventListener('click', loadRecent);
+
+    // ---------- Clientes ----------
+    let clientsCache = [];
+    async function loadClients() {
+      status('cliStatus', 'Carregando...');
+      const { data, error } = await client.from('subscriptions')
+        .select('id,customer_id,status,started_at,created_at,profiles(full_name,phone),plans(name),vehicles(make_model,plate)')
+        .order('created_at', { ascending: false }).limit(500);
+      if (error) { status('cliStatus', 'Não foi possível carregar: ' + error.message, 'error'); return; }
+      const seen = new Set(); clientsCache = [];
+      data.forEach(s => { if (!seen.has(s.customer_id)) { seen.add(s.customer_id); clientsCache.push(s); } });
+      renderClients();
+    }
+    function renderClients() {
+      const q = $('cliSearch').value.trim().toLowerCase();
+      const list = $('cliList'); clear(list);
+      const rows = clientsCache.filter(s => {
+        if (!q) return true;
+        const hay = [s.profiles?.full_name, s.plans?.name, STATUS_PT[s.status], s.vehicles?.plate, s.vehicles?.make_model].join(' ').toLowerCase();
+        return hay.includes(q);
+      });
+      if (!rows.length) { status('cliStatus', clientsCache.length ? 'Nenhum resultado para o filtro.' : 'Nenhum cliente com assinatura ainda.'); return; }
+      status('cliStatus', rows.length + ' cliente(s).', 'success');
+      rows.forEach(s => {
+        const it = el('div', 'item'); const top = el('div', 'row between');
+        top.append(el('span', 't', s.profiles?.full_name || 'Sem nome'), el('span', 'tag ' + (STATUS_CLS[s.status] || 'mute'), STATUS_PT[s.status] || s.status));
+        const days = s.started_at ? Math.floor((Date.now() - new Date(s.started_at).getTime()) / 86400000) : null;
+        it.append(top, el('div', 'small', (s.plans?.name || 'Sem plano') + (days != null ? ' · ' + days + ' dias de fidelidade' : '') + (s.vehicles ? ' · ' + s.vehicles.make_model + ' ' + s.vehicles.plate : ' · sem veículo vinculado')));
+        if (s.profiles?.phone) { const p = el('div', 'small'); const a = el('a', null, s.profiles.phone); a.href = 'tel:' + s.profiles.phone.replace(/[^0-9+]/g, ''); p.append('Telefone: ', a); it.appendChild(p); }
+        list.appendChild(it);
+      });
+    }
+    $('cliSearch').addEventListener('input', renderClients);
+    $('reloadCli').addEventListener('click', loadClients);
+
+    // ---------- Resumo ----------
+    async function loadSummary() {
+      const [dash, report] = await Promise.all([client.rpc('admin_dashboard'), client.rpc('plan_cost_report')]);
+      const d = dash.data && dash.data[0];
+      if (d) {
+        $('admMrr').textContent = money(Number(d.out_mrr_cents)); $('admSubs').textContent = d.out_active + ' ativas';
+        $('admSubsNote').textContent = d.out_past_due + ' em atraso'; $('admRed').textContent = d.out_redemptions_30d;
+        $('admCost').textContent = 'Custo estimado: ' + money(Number(d.out_cost_30d_cents));
+      } else if (dash.error) status('sumStatus', friendly(dash.error), 'error'), $('sumStatus').classList.remove('hidden');
+      const tb = $('costTable'); clear(tb);
+      (report.data || []).forEach(r => {
+        const tr = el('tr');
+        [r.out_name, money(r.out_price_cents), money(r.out_monthly_cost_cents), r.out_percent + '%', r.out_cap + '%' + (r.out_over_cap ? ' · acima do teto' : '')].forEach((t, i) => tr.appendChild(el('td', i === 4 && r.out_over_cap ? 'over' : null, t)));
+        tb.appendChild(tr);
+      });
+    }
+    $('reloadSum').addEventListener('click', loadSummary);
+
+    // ---------- Ajustes ----------
+    function numInput(label, value, step, min) { const f = el('div', 'field'); f.appendChild(el('label', null, label)); const i = el('input'); i.type = 'number'; i.value = value; i.step = step || '1'; i.min = min != null ? min : '0'; i.inputMode = 'decimal'; f.appendChild(i); return [f, i]; }
+    function textInput(label, value) { const f = el('div', 'field'); f.appendChild(el('label', null, label)); const i = el('input'); i.value = value; f.appendChild(i); return [f, i]; }
+    function checkInput(label, value) { const f = el('div', 'field'); f.appendChild(el('label', null, label)); const i = el('input'); i.type = 'checkbox'; i.checked = value; i.style.width = '28px'; i.style.height = '28px'; f.appendChild(i); return [f, i]; }
+    async function loadSettings() {
+      const [plans, bens] = await Promise.all([
+        client.from('plans').select('id,code,name,monthly_price_cents,grace_days,active').order('monthly_price_cents'),
+        client.from('benefits').select('id,name,unlock_days,cycle_days,active,plan_id,plans(name),benefit_costs(estimated_cost_cents)').order('plan_id').order('unlock_days')
+      ]);
+      const pe = $('planEditor'); clear(pe);
+      (plans.data || []).forEach(p => {
+        const row = el('div', 'editrow'); const [f1, price] = numInput('Mensalidade (R$) · ' + p.name, (p.monthly_price_cents / 100).toFixed(2), '0.01', '0.01');
+        const [f2, grace] = numInput('Tolerância de atraso (dias)', p.grace_days, '1', '0'); const [f3, act] = checkInput('Ativo', p.active);
+        const btn = el('button', 'secondary', 'Salvar'); btn.type = 'button';
+        btn.addEventListener('click', async () => {
+          const { error } = await client.from('plans').update({ monthly_price_cents: Math.round(parseFloat(price.value) * 100), grace_days: parseInt(grace.value, 10), active: act.checked }).eq('id', p.id);
+          status('adminStatus', error ? friendly(error) : 'Plano ' + p.name + ' salvo.', error ? 'error' : 'success'); if (!error) loadSettings();
+        });
+        row.append(f1, f2, f3, btn); pe.appendChild(row);
+      });
+      const np = $('nbPlan'); clear(np); (plans.data || []).forEach(p => { const o = el('option', null, p.name); o.value = p.id; np.appendChild(o); });
+      const be = $('benefitEditor'); clear(be);
+      (bens.data || []).forEach(b => {
+        const row = el('div', 'editrow'); const cost = b.benefit_costs ? (Array.isArray(b.benefit_costs) ? b.benefit_costs[0] : b.benefit_costs) : null;
+        const [f0, name] = textInput((b.plans?.name || '') + ' · nome', b.name); const [f1, ud] = numInput('Carência (dias)', b.unlock_days); const [f2, cd] = numInput('Ciclo (dias)', b.cycle_days, '1', '1');
+        const [f3, cs] = numInput('Custo (R$)', ((cost?.estimated_cost_cents || 0) / 100).toFixed(2), '0.01'); const [f4, act] = checkInput('Ativo', b.active);
+        const btn = el('button', 'secondary', 'Salvar'); btn.type = 'button';
+        btn.addEventListener('click', async () => {
+          const r1 = await client.from('benefits').update({ name: name.value.trim(), unlock_days: parseInt(ud.value, 10), cycle_days: parseInt(cd.value, 10), active: act.checked }).eq('id', b.id);
+          const r2 = r1.error ? r1 : await client.from('benefit_costs').upsert({ benefit_id: b.id, estimated_cost_cents: Math.round(parseFloat(cs.value) * 100) });
+          status('adminStatus', r2.error ? friendly(r2.error) : 'Benefício salvo.', r2.error ? 'error' : 'success'); if (!r2.error) loadSettings();
+        });
+        row.append(f0, f1, f2, f3, f4, btn); be.appendChild(row);
+      });
+    }
+    $('nbBtn').addEventListener('click', async () => {
+      const name = $('nbName').value.trim(); if (!name) { status('adminStatus', 'Informe o nome do benefício.', 'error'); return; }
+      const { data, error } = await client.from('benefits').insert({ plan_id: $('nbPlan').value, name, unlock_days: parseInt($('nbUnlock').value, 10) || 0, cycle_days: Math.max(1, parseInt($('nbCycle').value, 10) || 30) }).select('id').single();
+      if (error) { status('adminStatus', friendly(error), 'error'); return; }
+      const c = await client.from('benefit_costs').insert({ benefit_id: data.id, estimated_cost_cents: Math.round(parseFloat($('nbCost').value || '0') * 100) });
+      status('adminStatus', c.error ? friendly(c.error) : 'Benefício adicionado.', c.error ? 'error' : 'success'); $('nbName').value = ''; loadSettings();
+    });
+
+    // ---------- Início ----------
+    if (client) {
+      client.auth.getSession().then(async ({ data: { session } }) => { if (session) await enter(session.user); });
+    } else {
+      status('loginStatus', 'App ainda não configurado: preencha o arquivo config.js com a URL e a chave do Supabase.', 'error');
+    }
+    if ('serviceWorker' in navigator && location.protocol !== 'file:') window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+  </script>
+</body>
+</html>

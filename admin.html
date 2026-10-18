@@ -193,6 +193,7 @@
           <button id="nbBtn" type="button">Adicionar benefício</button>
           <div id="adminStatus" class="status">As alterações são salvas direto no banco.</div>
         </article>
+        <article class="card" style="margin-top:16px"><div class="eyebrow">Pontos</div><h2>Prêmios para troca</h2><p class="small">Valores de exemplo: ajuste ao custo real de vocês.</p><div id="rewardAdmin"></div><div class="editrow"><div class="field"><label for="rwName">Novo prêmio</label><input id="rwName"></div><div class="field"><label for="rwCost">Custo (pts)</label><input id="rwCost" type="number" min="1" inputmode="numeric"></div><button id="rwAdd" type="button">Adicionar</button></div><div id="rwStatus" class="status hidden"></div></article>
         <article class="card" style="margin-top:16px"><div class="eyebrow">Acesso</div><h2>Equipe (administradores)</h2><p class="small">Quem está aqui acessa este painel. A pessoa precisa já ter criado conta no app.</p><div id="teamList"></div>
           <div class="field"><label for="teamEmail">E-mail para adicionar</label><input id="teamEmail" type="email" inputmode="email" placeholder="socio@email.com"></div><button id="teamAdd" type="button">Adicionar administrador</button><div id="teamStatus" class="status hidden"></div></article>
       </section>
@@ -220,7 +221,8 @@
     const ERR = {
       CODE_INVALID_OR_EXPIRED: 'Código inválido, expirado ou já utilizado.',
       BENEFIT_NOT_AVAILABLE: 'Este benefício não está disponível (ciclo já usado ou mensalidade em atraso).',
-      FORBIDDEN: 'Ação permitida apenas para administradores.'
+      FORBIDDEN: 'Ação permitida apenas para administradores.',
+      INSUFFICIENT_POINTS: 'O cliente não tem pontos suficientes para este prêmio.'
     };
     const friendly = e => { const m = (e && e.message) || ''; for (const k in ERR) if (m.includes(k)) return ERR[k]; return m || 'Erro inesperado.'; };
     const STATUS_PT = { pending: 'Aguardando pagamento', active: 'Ativa', past_due: 'Em atraso', paused: 'Pausada', cancelled: 'Cancelada', expired: 'Expirada' };
@@ -267,7 +269,7 @@
       if (name === 'balcao') loadRecent();
       if (name === 'clientes' && !loaded.cli) { loaded.cli = true; loadClients(); }
       if (name === 'resumo') { loadSummary(); loadRefs(); }
-      if (name === 'ajustes' && !loaded.aj) { loaded.aj = true; loadSettings(); loadTeam(); }
+      if (name === 'ajustes' && !loaded.aj) { loaded.aj = true; loadSettings(); loadTeam(); loadRewards(); }
     }
     $('tabs').addEventListener('click', e => { const b = e.target.closest('button[data-tab]'); if (b) showTab(b.dataset.tab); });
 
@@ -276,7 +278,12 @@
       const code = $('redeemCode').value.trim();
       if (!/^[0-9]{6}$/.test(code)) { status('redeemStatus', 'Digite os 6 dígitos do código.', 'error'); return; }
       $('redeemBtn').disabled = true;
-      const { data, error } = await client.rpc('redeem_code', { p_code: code });
+      let { data, error } = await client.rpc('redeem_code', { p_code: code });
+      if (error && (error.message || '').includes('CODE_INVALID_OR_EXPIRED')) {
+        const rw = await client.rpc('redeem_reward_code', { p_code: code });
+        if (!rw.error) { $('redeemBtn').disabled = false; $('redeemCode').value = ''; const x = rw.data[0], bx = $('redeemStatus'); bx.className = 'result'; clear(bx); bx.append(el('strong', null, '✓ Prêmio entregue'), el('div', null, x.out_reward), el('div', 'small', (x.out_customer || 'Cliente') + ' · -' + x.out_cost + ' pts · saldo ' + x.out_balance + ' pts')); return; }
+        if (!(rw.error.message || '').includes('CODE_INVALID_OR_EXPIRED')) error = rw.error;
+      }
       $('redeemBtn').disabled = false;
       if (error) { status('redeemStatus', friendly(error), 'error'); return; }
       const r = data[0]; $('redeemCode').value = '';
@@ -351,6 +358,7 @@
         it.append(top, el('div', 'small', (s.plans?.name || 'Sem plano') + (days != null ? ' · ' + days + ' dias de fidelidade' : '') + (s.vehicles ? ' · ' + s.vehicles.make_model + ' ' + s.vehicles.plate : ' · sem veículo vinculado')));
         if (s.profiles?.phone) { const p = el('div', 'small'); const a = el('a', null, s.profiles.phone); a.href = 'tel:' + s.profiles.phone.replace(/[^0-9+]/g, ''); p.append('Telefone: ', a); it.appendChild(p); }
         const acts = el('div', 'row'); acts.style.marginTop = '8px';
+        const gp = el('button', 'secondary', 'Dar pontos'); gp.type = 'button'; gp.addEventListener('click', async () => { const v = parseInt(prompt('Quantos pontos dar a ' + (s.profiles?.full_name || 'este cliente') + '? (negativo para descontar)'), 10); if (!v) return; const x = await client.rpc('admin_grant_points', { p_customer: s.customer_id, p_points: v, p_reason: 'manual' }); gp.textContent = x.error ? 'Erro: ' + x.error.message : '✓ ' + v + ' pts lançados'; }); acts.appendChild(gp);
         const ob = el('button', 'secondary', 'Registrar serviço'); ob.type = 'button'; ob.addEventListener('click', () => serviceForm(s, it, ob)); acts.appendChild(ob);
         if (s.profiles?.phone) { let d = s.profiles.phone.replace(/\D/g, ''); if (d.length <= 11) d = '55' + d; const w = el('a', null, 'WhatsApp'); w.href = 'https://wa.me/' + d; w.target = '_blank'; w.rel = 'noopener'; w.style.padding = '12px 6px'; acts.appendChild(w); }
         it.appendChild(acts); list.appendChild(it);
@@ -410,19 +418,19 @@
     function checkInput(label, value) { const f = el('div', 'field'); f.appendChild(el('label', null, label)); const i = el('input'); i.type = 'checkbox'; i.checked = value; i.style.width = '28px'; i.style.height = '28px'; f.appendChild(i); return [f, i]; }
     async function loadSettings() {
       const [plans, bens] = await Promise.all([
-        client.from('plans').select('id,code,name,monthly_price_cents,grace_days,active').order('monthly_price_cents'),
+        client.from('plans').select('id,code,name,monthly_price_cents,grace_days,active,points_per_payment').order('monthly_price_cents'),
         client.from('benefits').select('id,name,unlock_days,cycle_days,active,plan_id,plans(name),benefit_costs(estimated_cost_cents)').order('plan_id').order('unlock_days')
       ]);
       const pe = $('planEditor'); clear(pe);
       (plans.data || []).forEach(p => {
         const row = el('div', 'editrow'); const [f1, price] = numInput('Mensalidade (R$) · ' + p.name, (p.monthly_price_cents / 100).toFixed(2), '0.01', '0.01');
-        const [f2, grace] = numInput('Tolerância de atraso (dias)', p.grace_days, '1', '0'); const [f3, act] = checkInput('Ativo', p.active);
+        const [f2, grace] = numInput('Tolerância de atraso (dias)', p.grace_days, '1', '0'); const [f3, act] = checkInput('Ativo', p.active); const [f2b, ppp] = numInput('Pontos por mensalidade', p.points_per_payment ?? 100, '1', '0');
         const btn = el('button', 'secondary', 'Salvar'); btn.type = 'button';
         btn.addEventListener('click', async () => {
-          const { error } = await client.from('plans').update({ monthly_price_cents: Math.round(parseFloat(price.value) * 100), grace_days: parseInt(grace.value, 10), active: act.checked }).eq('id', p.id);
+          const { error } = await client.from('plans').update({ monthly_price_cents: Math.round(parseFloat(price.value) * 100), grace_days: parseInt(grace.value, 10), points_per_payment: parseInt(ppp.value, 10) || 0, active: act.checked }).eq('id', p.id);
           status('adminStatus', error ? friendly(error) : 'Plano ' + p.name + ' salvo.', error ? 'error' : 'success'); if (!error) loadSettings();
         });
-        row.append(f1, f2, f3, btn); pe.appendChild(row);
+        row.append(f1, f2, f2b, f3, btn); pe.appendChild(row);
       });
       const np = $('nbPlan'); clear(np); (plans.data || []).forEach(p => { const o = el('option', null, p.name); o.value = p.id; np.appendChild(o); });
       const be = $('benefitEditor'); clear(be);
@@ -470,6 +478,16 @@
       const blob = new Blob(['\ufeff' + rows.map(r => r.map(q).join(';')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
       const l = document.createElement('a'); l.href = URL.createObjectURL(blob); l.download = 'clientes-linhagem.csv'; l.click(); URL.revokeObjectURL(l.href);
     });
+
+    // ---------- Prêmios ----------
+    const rwMsg = (m, t) => { $('rwStatus').classList.remove('hidden'); status('rwStatus', m, t); };
+    async function loadRewards() {
+      const { data, error } = await client.from('rewards').select('id,name,cost_points,active').order('cost_points'); const b = $('rewardAdmin'); clear(b);
+      if (error) { rwMsg('Rode o SQL 008 para ativar os pontos.', 'error'); return; }
+      data.forEach(r => { const row = el('div', 'editrow'); const [f1, n] = textInput('Prêmio', r.name), [f2, c] = numInput('Custo (pts)', r.cost_points, '1', '1'), [f3, act] = checkInput('Ativo', r.active); const sv = el('button', 'secondary', 'Salvar'); sv.type = 'button';
+        sv.addEventListener('click', async () => { const x = await client.from('rewards').update({ name: n.value.trim(), cost_points: parseInt(c.value, 10), active: act.checked }).eq('id', r.id); rwMsg(x.error ? friendly(x.error) : 'Prêmio salvo.', x.error ? 'error' : 'success'); }); row.append(f1, f2, f3, sv); b.appendChild(row); });
+    }
+    $('rwAdd').addEventListener('click', async () => { const n = $('rwName').value.trim(), c = parseInt($('rwCost').value, 10); if (!n || !(c > 0)) { rwMsg('Informe nome e custo.', 'error'); return; } const x = await client.from('rewards').insert({ name: n, cost_points: c }); rwMsg(x.error ? friendly(x.error) : 'Prêmio adicionado.', x.error ? 'error' : 'success'); if (!x.error) { $('rwName').value = ''; $('rwCost').value = ''; loadRewards(); } });
 
     // ---------- Equipe ----------
     const TEAM_ERR = { USER_NOT_FOUND: 'Nenhuma conta com esse e-mail. A pessoa precisa criar conta no app antes.', CANNOT_REMOVE_SELF: 'Você não pode remover o seu próprio acesso.' };

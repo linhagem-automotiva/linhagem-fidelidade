@@ -79,6 +79,21 @@
     .check input { width:20px; height:20px; margin-top:2px; flex:none; accent-color:var(--accent); }
     .linkbtn { background:none; border:0; color:var(--accentFg); padding:6px 0; font-weight:600; text-decoration:underline; min-height:0; }
     @media(max-width:760px){ header{margin:0 -20px;} }
+    /* ---- Celular: tudo mais compacto ---- */
+    body { font-size:15px; }
+    body.logged .hero, body.logged #acesso { display:none; }
+    @media(max-width:760px){
+      .shell { padding:12px; }
+      header { margin:0 -12px; padding:8px 12px; flex-direction:row; align-items:center; gap:8px; }
+      .brand img { height:30px; width:auto; } .brand .small, #sessionLabel { display:none; }
+      header .row button { padding:8px 14px; min-height:38px; }
+      .hero { padding:18px; border-radius:18px; margin-top:12px; } .hero h1 { font-size:1.65rem; margin:8px 0 10px; } .hero p { font-size:.93rem; margin-bottom:12px; }
+      .hero .row { flex-wrap:nowrap; } .hero .row button { flex:1; padding:11px 8px; font-size:.9rem; }
+      .hero-note { padding:14px; } .hero-note strong { font-size:1.2rem; }
+      .card { padding:16px; border-radius:16px; } h2 { font-size:1.12rem; } .metric { font-size:1.35rem; } .price { font-size:1.8rem; margin:8px 0 2px; }
+      .section-head { margin:20px 0 10px; } .dash-grid, .auth, .plans { gap:10px; margin-top:12px; } .benefit-list { margin:12px 0; } .qr { width:130px; height:130px; }
+      button { padding:11px 14px; } footer { margin-top:20px; }
+    }
   </style>
 </head>
 <body>
@@ -153,6 +168,7 @@
       FORBIDDEN: 'Ação permitida apenas para quem tem acesso a este recurso.',
       NO_ACTIVE_SUBSCRIPTION: 'Nenhuma assinatura ativa encontrada.',
       VEHICLE_REQUIRED: 'Vincule um veículo ao plano antes de gerar o código.',
+      SAME_PLAN: 'Este já é o seu plano atual.',
       ALREADY_SUBSCRIBED: 'Você já tem uma assinatura. Cancele a atual antes de assinar outro plano.',
       NOT_AUTHENTICATED: 'Entre na sua conta para continuar.',
       PLAN_NOT_FOUND: 'Plano indisponível no momento.',
@@ -166,7 +182,7 @@
     const upper = v => v.trim().replace(/\s+/g, ' ').toLocaleUpperCase('pt-BR');
     const every = d => d % 365 === 0 ? (d === 365 ? '1 ano' : (d / 365) + ' anos') : d % 30 === 0 ? (d === 30 ? '1 mês' : (d / 30) + ' meses') : d + ' dias';
     const STATUS_PT = { pending: 'Aguardando pagamento', active: 'Ativa', past_due: 'Pagamento em atraso', paused: 'Pausada', cancelled: 'Cancelada', expired: 'Expirada' };
-    let vehiclesCache = [];
+    let vehiclesCache = [], curSub = null;
     async function callFn(name, body) {
       const { data, error } = await client.functions.invoke(name, { body });
       if (error) { let m = error.message; try { const j = await error.context.json(); m = j.error || m; } catch (_) {} throw new Error(m); }
@@ -176,6 +192,13 @@
       if (!client) { status('planStatus', 'Ainda não configurado.', 'error'); return; }
       const { data: { session } } = await client.auth.getSession();
       if (!session) { status('authStatus', 'Entre ou crie sua conta para assinar o plano ' + name + '.', 'error'); $('acesso').scrollIntoView({ behavior: 'smooth' }); return; }
+      if (curSub && ['active', 'past_due', 'paused'].includes(curSub.status)) {
+        if (!confirm('Trocar para o plano ' + name + '? O novo valor vale a partir da próxima cobrança e seu tempo de fidelidade é mantido.')) return;
+        status('planStatus', 'Trocando de plano...');
+        try { await callFn('change-plan', { plan_code: code }); status('planStatus', 'Plano alterado para ' + name + '!', 'success'); await refreshCurrent(); loadPlans(); }
+        catch (e) { status('planStatus', friendly(e), 'error'); }
+        return;
+      }
       if (!confirm('Assinar o plano ' + name + '? Você será levado ao Mercado Pago para pagar. A cobrança é mensal e pode ser cancelada a qualquer momento.')) return;
       status('planStatus', 'Preparando seu pagamento...');
       try {
@@ -198,7 +221,8 @@
         (p.benefits || []).filter(b => b.active).sort((a, b) => a.unlock_days - b.unlock_days).forEach(b => {
           ul.appendChild(el('li', null, b.name + ': 1 a cada ' + every(b.cycle_days) + (b.unlock_days ? ', a partir de ' + every(b.unlock_days) : ', já na adesão')));
         });
-        const sb = el('button', null, 'Assinar ' + p.name); sb.type = 'button'; sb.addEventListener('click', () => subscribe(p.code, p.name));
+        const mine = curSub && ['active', 'past_due', 'paused'].includes(curSub.status);
+        const sb = el('button', mine ? 'secondary' : null, mine ? 'Trocar para ' + p.name : 'Assinar ' + p.name); sb.type = 'button'; sb.addEventListener('click', () => subscribe(p.code, p.name));
         card.append(el('div', 'eyebrow', p.name), price, el('p', null, p.description), ul, sb);
         grid.appendChild(card);
       });
@@ -239,13 +263,13 @@
     }
     async function refreshDashboard(user) {
       const profile = await getProfile(user);
-      $('authCard').classList.add('hidden'); $('dashboard').classList.remove('hidden'); $('signOutBtn').classList.remove('hidden');
+      document.body.classList.add('logged'); $('authCard').classList.add('hidden'); $('dashboard').classList.remove('hidden'); $('signOutBtn').classList.remove('hidden');
       $('sessionLabel').textContent = user.email || 'Conta conectada'; $('welcome').textContent = 'Olá, ' + (profile.full_name || 'cliente') + '!'; $('profileSummary').textContent = user.email || '';
       $('rolePill').textContent = profile.role === 'admin' ? 'Administrador' : 'Cliente'; $('adminLink').classList.toggle('hidden', profile.role !== 'admin');
 
       const { data: subs, error: subsError } = await client.from('subscriptions').select('id,status,started_at,vehicle_id,plans(name,monthly_price_cents)').order('created_at', { ascending: false }).limit(1);
       if (subsError) throw subsError;
-      const sub = subs && subs[0];
+      const sub = subs && subs[0]; const hadSub = curSub && curSub.status; curSub = sub || null; if (hadSub !== (sub && sub.status)) loadPlans();
       $('currentPlan').textContent = sub?.plans?.name || 'Sem plano'; $('subStatus').textContent = sub ? 'Situação: ' + (STATUS_PT[sub.status] || sub.status) : 'Nenhuma assinatura vinculada';
       $('cancelSubBtn').classList.toggle('hidden', !(sub && ['pending', 'active', 'past_due', 'paused'].includes(sub.status)));
       const days = sub?.started_at ? Math.max(0, Math.floor((Date.now() - new Date(sub.started_at).getTime()) / 86400000)) : 0;
@@ -339,7 +363,7 @@
       catch (e) { status('benefitsStatus', friendly(e), 'error'); }
     });
     $('readNoticesBtn').addEventListener('click', async () => { await client.from('notifications').update({ read_at: new Date().toISOString() }).is('read_at', null); refreshCurrent(); });
-    $('signOutBtn').addEventListener('click', async () => { if (client) await client.auth.signOut(); $('dashboard').classList.add('hidden'); $('authCard').classList.remove('hidden'); $('signOutBtn').classList.add('hidden'); $('sessionLabel').textContent = 'Acesso do cliente'; status('authStatus', 'Você saiu da sua conta.'); });
+    $('signOutBtn').addEventListener('click', async () => { if (client) await client.auth.signOut(); document.body.classList.remove('logged'); curSub = null; $('dashboard').classList.add('hidden'); $('authCard').classList.remove('hidden'); $('signOutBtn').classList.add('hidden'); $('sessionLabel').textContent = 'Acesso do cliente'; status('authStatus', 'Você saiu da sua conta.'); });
     // ---------- Recuperar senha ----------
     $('forgotBtn').addEventListener('click', async () => {
       if (!client) { status('authStatus', 'Preencha o arquivo config.js primeiro.', 'error'); return; }

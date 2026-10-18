@@ -190,6 +190,8 @@
           <button id="nbBtn" type="button">Adicionar benefício</button>
           <div id="adminStatus" class="status">As alterações são salvas direto no banco.</div>
         </article>
+        <article class="card" style="margin-top:16px"><div class="eyebrow">Acesso</div><h2>Equipe (administradores)</h2><p class="small">Quem está aqui acessa este painel. A pessoa precisa já ter criado conta no app.</p><div id="teamList"></div>
+          <div class="field"><label for="teamEmail">E-mail para adicionar</label><input id="teamEmail" type="email" inputmode="email" placeholder="socio@email.com"></div><button id="teamAdd" type="button">Adicionar administrador</button><div id="teamStatus" class="status hidden"></div></article>
       </section>
       <footer>LINHAGEM AUTOMOTIVA · Painel da oficina · <a href="./index.html">Área do cliente</a></footer>
     </main>
@@ -262,7 +264,7 @@
       if (name === 'balcao') loadRecent();
       if (name === 'clientes' && !loaded.cli) { loaded.cli = true; loadClients(); }
       if (name === 'resumo') loadSummary();
-      if (name === 'ajustes' && !loaded.aj) { loaded.aj = true; loadSettings(); }
+      if (name === 'ajustes' && !loaded.aj) { loaded.aj = true; loadSettings(); loadTeam(); }
     }
     $('tabs').addEventListener('click', e => { const b = e.target.closest('button[data-tab]'); if (b) showTab(b.dataset.tab); });
 
@@ -435,6 +437,21 @@
       const blob = new Blob(['\ufeff' + rows.map(r => r.map(q).join(';')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
       const l = document.createElement('a'); l.href = URL.createObjectURL(blob); l.download = 'clientes-linhagem.csv'; l.click(); URL.revokeObjectURL(l.href);
     });
+
+    // ---------- Equipe ----------
+    const TEAM_ERR = { USER_NOT_FOUND: 'Nenhuma conta com esse e-mail. A pessoa precisa criar conta no app antes.', CANNOT_REMOVE_SELF: 'Você não pode remover o seu próprio acesso.' };
+    const teamMsg = (m, t) => { $('teamStatus').classList.remove('hidden'); status('teamStatus', m, t); };
+    async function setRole(email, role) {
+      const { error } = await client.rpc('admin_set_role', { p_email: email, p_role: role });
+      if (error) { const k = Object.keys(TEAM_ERR).find(x => (error.message || '').includes(x)); teamMsg(k ? TEAM_ERR[k] : friendly(error), 'error'); return; }
+      teamMsg(role === 'admin' ? 'Administrador adicionado.' : 'Acesso removido.', 'success'); $('teamEmail').value = ''; loadTeam();
+    }
+    async function loadTeam() {
+      const { data, error } = await client.rpc('admin_team'); const l = $('teamList'); clear(l);
+      if (error) { teamMsg('Rode o SQL 004_equipe.sql no Supabase para ativar esta função.', 'error'); return; }
+      data.forEach(m => { const it = el('div', 'item row between'); const info = el('div'); info.append(el('div', 't', m.out_name || 'Sem nome'), el('div', 'small', m.out_email)); const b = el('button', 'secondary', 'Remover'); b.type = 'button'; b.addEventListener('click', () => { if (confirm('Remover o acesso de ' + m.out_email + '?')) setRole(m.out_email, 'customer'); }); it.append(info, b); l.appendChild(it); });
+    }
+    $('teamAdd').addEventListener('click', () => { const e = $('teamEmail').value.trim(); if (!e) { teamMsg('Digite o e-mail.', 'error'); return; } setRole(e, 'admin'); });
 
     // ---------- Início ----------
     if (client) {

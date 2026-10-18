@@ -63,9 +63,26 @@
     .editrow .field { margin:0; } td.over { color:var(--danger); font-weight:700; }
     button:focus-visible,input:focus-visible,select:focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
     @media(max-width:760px) { .hero-grid,.auth { grid-template-columns:1fr; } .plans { grid-template-columns:1fr; } .dash-grid { grid-template-columns:1fr; } .hero { padding:22px; } header { align-items:flex-start; flex-direction:column; } }
+
+    /* ---- Visual v4 ---- */
+    body { background:radial-gradient(1200px 500px at 85% -10%,#3a0d0d55,transparent),var(--bg); }
+    header { position:sticky; top:0; z-index:15; margin:0 -20px; padding:10px 20px; background:#0E0F11d9; backdrop-filter:blur(10px); border-bottom:1px solid var(--line); }
+    .card { transition:transform .2s,border-color .2s; background:linear-gradient(180deg,#1b1c20,#151619); }
+    .card:hover { border-color:#5a2a2a; }
+    .plan-featured { background:linear-gradient(180deg,#2a1214,#161012); }
+    button { transition:transform .1s,filter .2s; } button:active { transform:scale(.97); } button:hover { filter:brightness(1.12); }
+    .hero h1 { background:linear-gradient(90deg,#fff,#ffb3b3); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .qr { display:block; margin:10px auto 0; width:150px; height:150px; border-radius:12px; background:#fff; padding:8px; image-rendering:pixelated; }
+    .installbar { position:fixed; left:12px; right:12px; bottom:calc(12px + env(safe-area-inset-bottom,0px)); z-index:40; display:flex; gap:12px; align-items:center; justify-content:space-between; padding:14px 16px; border:1px solid var(--accent); border-radius:16px; background:#1a0f10f2; box-shadow:0 10px 40px #000a; }
+    .installbar p { margin:0; color:var(--text); font-size:.9rem; }
+    .check { display:flex; gap:10px; align-items:flex-start; font-size:.85rem; margin:10px 0; }
+    .check input { width:20px; height:20px; margin-top:2px; flex:none; accent-color:var(--accent); }
+    .linkbtn { background:none; border:0; color:var(--accentFg); padding:6px 0; font-weight:600; text-decoration:underline; min-height:0; }
+    @media(max-width:760px){ header{margin:0 -20px;} }
   </style>
 </head>
 <body>
+  <div id="installBar" class="installbar hidden"><p id="installMsg">Instale o app na tela inicial.</p><div class="row"><button id="installBtn" type="button">Instalar</button><button id="installClose" type="button" class="secondary" aria-label="Fechar">✕</button></div></div>
   <main class="shell">
     <header>
       <div class="brand"><img src="./logo.png" alt="Linhagem Automotiva" width="157" height="54"><span class="small">Programa de fidelidade</span></div>
@@ -78,6 +95,8 @@
         <div class="hero-note"><div class="eyebrow">Benefícios por permanência</div><strong>Liberam e renovam</strong><p>Cada plano libera benefícios com o tempo de assinatura e renova a cada ciclo. Dependem de mensalidade em dia e das regras do plano.</p></div>
       </div>
     </section>
+
+    <section id="recoverCard" class="card hidden" style="margin-top:20px"><div class="eyebrow">Recuperar acesso</div><h2>Crie uma nova senha</h2><div class="field"><label for="newPass">Nova senha (mínimo 8 caracteres)</label><input id="newPass" type="password" minlength="8" autocomplete="new-password"></div><button id="newPassBtn" type="button">Salvar nova senha</button><div id="recoverStatus" class="status hidden"></div></section>
 
     <section id="planos">
       <div class="section-head"><div><div class="eyebrow">Escolha seu plano</div><h2>Uma experiência para cada motorista</h2></div></div>
@@ -95,7 +114,9 @@
           <div class="field"><label for="fullName">Nome completo (para cadastro)</label><input id="fullName" autocomplete="name" placeholder="Seu nome" /></div>
           <div class="field"><label for="email">E-mail</label><input id="email" type="email" autocomplete="email" required placeholder="voce@email.com" /></div>
           <div class="field"><label for="password">Senha</label><input id="password" type="password" autocomplete="current-password" minlength="8" required placeholder="Mínimo de 8 caracteres" /></div>
+          <label class="check"><input id="terms" type="checkbox"><span>Li e aceito os <a href="./termos.html" target="_blank" rel="noopener">Termos de Uso</a> e a <a href="./privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a> (necessário para criar conta).</span></label>
           <div class="row"><button id="loginBtn" type="button">Entrar</button><button id="signupBtn" type="button" class="secondary">Criar conta</button></div>
+          <button id="forgotBtn" type="button" class="linkbtn">Esqueci minha senha</button>
         </form><div id="authStatus" class="status">Entre com seu e-mail e senha ou crie sua conta.</div>
       </article>
       <article class="card"><div class="eyebrow">Transparência</div><h2>Feito para cuidar bem</h2><p>Os dados da conta são isolados por usuário no banco de dados. A administração é reservada a contas autorizadas pelo responsável.</p><ul class="benefit-list"><li>Cadastro e veículos vinculados à conta</li><li>Histórico de mensalidades e benefícios</li><li>Confirmação de pagamento pelo servidor</li></ul><div class="status">Os pagamentos são processados pelo Mercado Pago. Os dados do seu cartão são informados no ambiente do Mercado Pago, nunca neste app.</div></article>
@@ -113,6 +134,7 @@
     <footer>LINHAGEM AUTOMOTIVA · Programa de fidelidade</footer>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
   <script src="./config.js"></script>
   <script>
     // As chaves do Supabase ficam no arquivo config.js (um só lugar para os dois painéis).
@@ -200,6 +222,7 @@
           const box = el('div', 'code', b.code); const cd = el('span', 'cd'); cd.dataset.exp = b.code_expires_at;
           const note = el('p', 'small', 'Mostre este código na oficina. Válido por '); note.append(cd, document.createTextNode('.'));
           card.append(box, note);
+          try { if (window.qrcode) { const q = qrcode(0, 'M'); q.addData('LA:' + b.code); q.make(); const im = el('img', 'qr'); im.alt = 'QR code do resgate'; im.src = q.createDataURL(6, 0); card.appendChild(im); } } catch (_) {}
         } else {
           card.appendChild(el('p', 'small', 'Renova ' + b.days_to_renew + ' dias após o início deste ciclo.'));
           const btn = el('button', null, 'Gerar código de resgate'); btn.type = 'button';
@@ -289,6 +312,7 @@
       try {
         let result;
         if (mode === 'signup') {
+          if (!$('terms').checked) { status('authStatus', 'Aceite os Termos de Uso e a Política de Privacidade para criar a conta.', 'error'); return; }
           const full_name = upper($('fullName').value || '');
           result = await client.auth.signUp({ email, password, options: { data: { full_name } } });
           if (result.error) throw result.error;
@@ -316,6 +340,34 @@
     });
     $('readNoticesBtn').addEventListener('click', async () => { await client.from('notifications').update({ read_at: new Date().toISOString() }).is('read_at', null); refreshCurrent(); });
     $('signOutBtn').addEventListener('click', async () => { if (client) await client.auth.signOut(); $('dashboard').classList.add('hidden'); $('authCard').classList.remove('hidden'); $('signOutBtn').classList.add('hidden'); $('sessionLabel').textContent = 'Acesso do cliente'; status('authStatus', 'Você saiu da sua conta.'); });
+    // ---------- Recuperar senha ----------
+    $('forgotBtn').addEventListener('click', async () => {
+      if (!client) { status('authStatus', 'Preencha o arquivo config.js primeiro.', 'error'); return; }
+      const email = $('email').value.trim().toLowerCase();
+      if (!email) { status('authStatus', 'Digite seu e-mail no campo acima e toque em "Esqueci minha senha".', 'error'); return; }
+      const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+      status('authStatus', error ? error.message : 'Se este e-mail tiver cadastro, enviamos um link para criar uma nova senha.', error ? 'error' : 'success');
+    });
+    $('newPassBtn').addEventListener('click', async () => {
+      const p = $('newPass').value; const st = $('recoverStatus'); st.classList.remove('hidden');
+      if (p.length < 8) { status('recoverStatus', 'Use pelo menos 8 caracteres.', 'error'); return; }
+      const { error } = await client.auth.updateUser({ password: p });
+      if (error) { status('recoverStatus', error.message, 'error'); return; }
+      status('recoverStatus', 'Senha atualizada! Você já está conectado.', 'success'); $('newPass').value = ''; setTimeout(() => $('recoverCard').classList.add('hidden'), 2500); refreshCurrent();
+    });
+    if (client) client.auth.onAuthStateChange(ev => { if (ev === 'PASSWORD_RECOVERY') { $('recoverCard').classList.remove('hidden'); $('recoverCard').scrollIntoView({ behavior: 'smooth' }); } });
+
+    // ---------- Instalar como app ----------
+    (function () {
+      const bar = $('installBar'), standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+      if (standalone || localStorage.getItem('installDismissed')) return;
+      let ev = null;
+      window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); ev = e; bar.classList.remove('hidden'); });
+      if (/iphone|ipad|ipod/i.test(navigator.userAgent)) { $('installMsg').textContent = 'Para instalar: toque em Compartilhar e depois em "Adicionar à Tela de Início".'; $('installBtn').classList.add('hidden'); setTimeout(() => bar.classList.remove('hidden'), 4000); }
+      $('installBtn').addEventListener('click', async () => { if (ev) { ev.prompt(); await ev.userChoice; ev = null; bar.classList.add('hidden'); } });
+      $('installClose').addEventListener('click', () => { bar.classList.add('hidden'); try { localStorage.setItem('installDismissed', '1'); } catch (_) {} });
+    })();
+
     if (client) {
       loadPlans();
       if (new URLSearchParams(location.search).get('assinatura') === 'retorno') { // voltou do Mercado Pago: aguarda a confirmação do webhook

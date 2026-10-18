@@ -129,6 +129,7 @@
             <p class="small">Peça ao cliente o código de 6 dígitos que aparece no app dele (vale 10 minutos).</p>
             <div class="field"><label for="redeemCode">Código do cliente</label><input id="redeemCode" class="big" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="······" autocomplete="off"></div>
             <button id="redeemBtn" type="button" class="full">Validar e dar baixa</button>
+            <button id="scanBtn" type="button" class="secondary full" style="margin-top:10px">📷 Ler QR code do cliente</button>
             <div id="redeemStatus" class="status">Digite os 6 dígitos e confirme.</div>
           </article>
           <article class="card">
@@ -150,7 +151,7 @@
       <!-- CLIENTES -->
       <section id="tab-clientes" class="hidden">
         <article class="card">
-          <div class="row between"><div><div class="eyebrow">Carteira</div><h2>Clientes com assinatura</h2></div><button id="reloadCli" type="button" class="secondary">Atualizar</button></div>
+          <div class="row between"><div><div class="eyebrow">Carteira</div><h2>Clientes com assinatura</h2></div><div class="row"><button id="csvCli" type="button" class="secondary">Exportar planilha</button><button id="reloadCli" type="button" class="secondary">Atualizar</button></div></div>
           <div class="field"><label for="cliSearch">Filtrar por nome, placa, plano ou situação</label><input id="cliSearch" placeholder="Digite para filtrar" autocomplete="off"></div>
           <div id="cliList"></div>
           <div id="cliStatus" class="status">Abra esta aba para carregar.</div>
@@ -194,6 +195,8 @@
     </main>
   </div>
 
+  <div id="scanBox" class="hidden" style="position:fixed;inset:0;z-index:100;background:#000e;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px"><video id="scanVideo" playsinline muted style="width:min(92vw,460px);border-radius:16px;border:2px solid var(--accent)"></video><p id="scanMsg" style="color:#fff;margin:0">Aponte para o QR code do cliente</p><button id="scanClose" type="button" class="secondary">Cancelar</button></div>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4"></script>
   <script src="./config.js"></script>
   <script>
@@ -407,6 +410,30 @@
       if (error) { status('adminStatus', friendly(error), 'error'); return; }
       const c = await client.from('benefit_costs').insert({ benefit_id: data.id, estimated_cost_cents: Math.round(parseFloat($('nbCost').value || '0') * 100) });
       status('adminStatus', c.error ? friendly(c.error) : 'Benefício adicionado.', c.error ? 'error' : 'success'); $('nbName').value = ''; loadSettings();
+    });
+
+    // ---------- Leitor de QR e exportação ----------
+    let scanStream = null, scanOn = false;
+    function stopScan() { scanOn = false; if (scanStream) scanStream.getTracks().forEach(t => t.stop()); scanStream = null; $('scanBox').classList.add('hidden'); }
+    $('scanBtn').addEventListener('click', async () => {
+      if (!window.jsQR) { status('redeemStatus', 'Leitor de QR indisponível agora. Digite o código.', 'error'); return; }
+      try { scanStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }); }
+      catch (_) { status('redeemStatus', 'Sem acesso à câmera. Permita o uso da câmera ou digite o código.', 'error'); return; }
+      const v = $('scanVideo'); v.srcObject = scanStream; await v.play(); $('scanBox').classList.remove('hidden'); scanOn = true;
+      const cv = document.createElement('canvas'), cx = cv.getContext('2d', { willReadFrequently: true });
+      (function tick() {
+        if (!scanOn) return;
+        if (v.videoWidth) { cv.width = v.videoWidth; cv.height = v.videoHeight; cx.drawImage(v, 0, 0); const r = jsQR(cx.getImageData(0, 0, cv.width, cv.height).data, cv.width, cv.height); const m = r && /^LA:(\d{6})$/.exec(r.data); if (m) { stopScan(); $('redeemCode').value = m[1]; status('redeemStatus', 'QR lido. Confira e toque em "Validar e dar baixa".', 'success'); return; } }
+        requestAnimationFrame(tick);
+      })();
+    });
+    $('scanClose').addEventListener('click', stopScan);
+    $('csvCli').addEventListener('click', () => {
+      if (!clientsCache.length) return;
+      const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+      const rows = [['Nome', 'Telefone', 'Plano', 'Situação', 'Veículo', 'Placa', 'Início']].concat(clientsCache.map(s => [s.profiles?.full_name, s.profiles?.phone, s.plans?.name, STATUS_PT[s.status] || s.status, s.vehicles?.make_model, s.vehicles?.plate, s.started_at ? new Date(s.started_at).toLocaleDateString('pt-BR') : '']));
+      const blob = new Blob(['\ufeff' + rows.map(r => r.map(q).join(';')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+      const l = document.createElement('a'); l.href = URL.createObjectURL(blob); l.download = 'clientes-linhagem.csv'; l.click(); URL.revokeObjectURL(l.href);
     });
 
     // ---------- Início ----------

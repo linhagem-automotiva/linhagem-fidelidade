@@ -108,7 +108,7 @@
   <link rel="stylesheet" href="./theme.css">
 </head>
 <body>
-  <nav id="appNav" class="appnav" aria-label="Menu do app"><button type="button" data-t="inicio" class="on"><span>🏠</span>Início</button><button type="button" data-t="planos"><span>💳</span>Planos</button><button type="button" data-t="servicos"><span>🛠️</span>Serviços</button><button type="button" data-t="perfil"><span>👤</span>Perfil</button></nav>
+  <nav id="appNav" class="appnav" aria-label="Menu do app"><button type="button" data-t="inicio" class="on"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Início</button><button type="button" data-t="planos"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg>Planos</button><button type="button" data-t="servicos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/></svg>Serviços</button><button type="button" data-t="perfil"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Perfil</button></nav>
   <div id="installBar" class="installbar hidden"><p id="installMsg">Instale o app na tela inicial.</p><div class="row"><button id="installBtn" type="button">Instalar</button><button id="installClose" type="button" class="secondary" aria-label="Fechar">✕</button></div></div>
   <main class="shell">
     <header>
@@ -152,17 +152,21 @@
     </section>
 
     <section id="dashboard" class="hidden">
-      <div class="section-head" data-pane="inicio"><div><div class="eyebrow">Minha conta</div><h2 id="welcome">Olá!</h2><p id="profileSummary">Seu programa de fidelidade.</p></div><div class="row"><a id="adminLink" href="./admin.html" class="hidden" style="color:var(--accentFg);font-weight:750">Abrir painel da oficina →</a><span id="rolePill" class="status" style="margin-top:0">Cliente</span></div></div>
+      <div class="homehero" data-pane="inicio"><img src="./logo.png" alt="Linhagem Automotiva"><span class="fid">FIDELIDADE</span><div class="greet"><h2 id="welcome">Olá!</h2><p id="profileSummary">Seu programa de fidelidade.</p><a id="adminLink" href="./admin.html" class="hidden">Abrir painel da oficina →</a><span id="rolePill" hidden>Cliente</span></div></div>
       <div class="dash-grid" data-pane="inicio"><article class="card"><span class="small">Plano atual</span><div class="metric" id="currentPlan">—</div><p id="subStatus">Nenhuma assinatura ativa</p><button id="cancelSubBtn" type="button" class="secondary hidden">Cancelar assinatura</button></article><article class="card"><span class="small">Tempo de fidelidade</span><div class="metric" id="monthsActive">0 dias</div><p>Benefícios liberam por carência e renovam a cada ciclo.</p></article><article class="card"><span class="small">Benefícios disponíveis</span><div class="metric" id="benefitCount">0</div><p>Liberação calculada pelo servidor</p></article></div>
+      <button id="ctaPlans" class="cta" data-pane="inicio" type="button"><svg viewBox='0 0 24 24' aria-hidden='true'><rect x='3' y='8' width='18' height='4' rx='1'/><path d='M12 8v13M5 12v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8M8 8a2.5 2.5 0 0 1 0-5c2 0 4 2 4 5 0-3 2-5 4-5a2.5 2.5 0 0 1 0 5'/></svg><span><b>Conheça todos os benefícios</b><small>Veja o que cada plano oferece</small></span><svg class='chev' viewBox='0 0 24 24' aria-hidden='true'><path d='m9 6 6 6-6 6'/></svg></button>
       <article id="noticeBox" data-pane="inicio" class="card hidden"><h2>Avisos</h2><div id="noticeList"></div><button id="readNoticesBtn" type="button" class="secondary">Marcar como lidos</button></article>
       <div class="section-head" data-pane="inicio"><div><h2>Meus benefícios</h2></div></div>
       <div id="benefitsStatus" data-pane="inicio" class="status">Seus benefícios aparecem aqui quando a assinatura estiver ativa.</div>
       <div id="benefitsList" data-pane="inicio" class="bgrid"></div>
+      <div class="pfhead" data-pane="perfil"><div class="avatar"><svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='8' r='4'/><path d='M4 21a8 8 0 0 1 16 0'/></svg></div><div><strong id="pfHeadName">—</strong><span id="pfHeadMail"></span></div></div>
       <article class="card" data-pane="perfil" style="margin-bottom:14px"><div class="eyebrow">Meus dados</div><form id="profileForm"><div class="field"><label for="pfFullName">Nome completo</label><input id="pfFullName" required></div><div class="field"><label for="pfEmail">E-mail</label><input id="pfEmail" disabled></div><div class="field"><label for="pfPhone">WhatsApp</label><input id="pfPhone" type="tel" inputmode="tel" placeholder="(53) 99999-9999"></div><button type="submit">Salvar dados</button></form><div id="pfStatus" class="status hidden"></div></article>
       <div class="auth" data-pane="perfil"><article class="card"><h2>Meu veículo</h2><form id="vehicleForm"><div class="field"><label for="vehicleName">Marca e modelo</label><input id="vehicleName" required placeholder="Ex.: VW Nivus" /></div><div class="field"><label for="vehiclePlate">Placa</label><input id="vehiclePlate" required maxlength="8" placeholder="ABC1D23" autocapitalize="characters" /></div><div class="field"><label for="vehicleColor">Cor</label><input id="vehicleColor" placeholder="Cor do veículo" /></div><button type="submit">Salvar veículo</button></form><div id="vehicleStatus" class="status">Seus veículos aparecerão aqui.</div><div id="vehicleList"></div></article><article class="card"><h2>Mensalidades</h2><div id="paymentsList"></div><div id="paymentsStatus" class="status">Nenhum pagamento disponível.</div></article></div>
       <article class="card" data-pane="servicos"><div class="eyebrow">Agenda</div><h2>Serviços programados</h2><div id="nextList"></div><div id="nextStatus" class="status">Carregando...</div></article>
       <article class="card" data-pane="servicos" style="margin-top:14px"><div class="eyebrow">Histórico</div><h2>Serviços realizados</h2><div id="historyList"></div><div id="historyStatus" class="status">Carregando...</div></article>
+      <div class="banner" data-pane="servicos"><strong>Seu carro sempre como novo!</strong><span>Cuide de cada detalhe com a Linhagem.</span></div>
       <article class="card" data-pane="perfil" style="margin-top:14px"><div class="eyebrow">Indique e ganhe</div><h2>Convide um amigo</h2><p id="refText">Quando um amigo assinar e pagar, você ganha uma recompensa.</p><div class="row"><span id="refCode" class="tag available">—</span><span id="refCount" class="small"></span></div><button id="refShare" type="button" style="margin-top:12px">Compartilhar convite</button><div id="refMsg" class="status hidden"></div></article>
+      <button id="logoutRow" class="secondary menurow" data-pane="perfil" type="button">Sair da conta</button>
     </section>
     <footer>LINHAGEM AUTOMOTIVA · Programa de fidelidade</footer>
   </main>
@@ -243,7 +247,8 @@
         const mine = curSub && ['active', 'past_due', 'paused'].includes(curSub.status);
         const sb = el('button', mine ? 'secondary' : null, mine ? (curSub.plans?.name === p.name ? 'Seu plano atual' : 'Trocar para ' + p.name) : 'Assinar ' + p.name);
         if (mine && curSub.plans?.name === p.name) sb.disabled = true; sb.type = 'button'; sb.addEventListener('click', () => subscribe(p.code, p.name));
-        card.append(el('div', 'eyebrow', p.name), price, el('p', null, p.description), ul, sb);
+        const hd = el('div', 'plan-hd'); const cr = el('span', 'crown'); cr.innerHTML = "<svg viewBox='0 0 24 24' aria-hidden='true'><path d='M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z'/></svg>"; hd.append(cr, el('h3', null, p.name));
+        card.append(hd, price, el('p', null, p.description), ul, sb);
         grid.appendChild(card);
       });
     }
@@ -283,14 +288,14 @@
     }
     async function refreshDashboard(user) {
       const profile = await getProfile(user);
-      document.body.classList.add('logged'); if (!document.body.classList.contains('keeptab')) setTab('inicio'); document.body.classList.add('keeptab'); loadExtras().catch(() => {}); $('authCard').classList.add('hidden'); $('dashboard').classList.remove('hidden'); $('signOutBtn').classList.remove('hidden');
+      document.body.classList.add('logged'); try { localStorage.removeItem('ref'); } catch (_) {} if (!document.body.classList.contains('keeptab')) setTab('inicio'); document.body.classList.add('keeptab'); loadExtras().catch(() => {}); $('authCard').classList.add('hidden'); $('dashboard').classList.remove('hidden'); $('signOutBtn').classList.remove('hidden');
       $('sessionLabel').textContent = user.email || 'Conta conectada'; $('welcome').textContent = 'Olá, ' + (profile.full_name || 'cliente') + '!'; $('profileSummary').textContent = user.email || '';
       $('rolePill').textContent = profile.role === 'admin' ? 'Administrador' : 'Cliente'; $('adminLink').classList.toggle('hidden', profile.role !== 'admin');
 
       const { data: subs, error: subsError } = await client.from('subscriptions').select('id,status,started_at,vehicle_id,plans(name,monthly_price_cents)').order('created_at', { ascending: false }).limit(1);
       if (subsError) throw subsError;
       const sub = subs && subs[0]; const hadSub = curSub && curSub.status; curSub = sub || null; if (hadSub !== (sub && sub.status)) loadPlans();
-      $('currentPlan').textContent = sub?.plans?.name || 'Sem plano'; $('subStatus').textContent = sub ? 'Situação: ' + (STATUS_PT[sub.status] || sub.status) : 'Nenhuma assinatura vinculada';
+      const dead = !sub || ['cancelled', 'expired'].includes(sub.status); $('currentPlan').textContent = dead ? 'Sem plano ativo' : sub.plans?.name; $('subStatus').textContent = sub ? 'Situação: ' + (STATUS_PT[sub.status] || sub.status) : 'Nenhuma assinatura vinculada';
       $('cancelSubBtn').classList.toggle('hidden', !(sub && ['pending', 'active', 'past_due', 'paused'].includes(sub.status)));
       const days = sub?.started_at ? Math.max(0, Math.floor((Date.now() - new Date(sub.started_at).getTime()) / 86400000)) : 0;
       $('monthsActive').textContent = days + ' dias';
@@ -340,7 +345,7 @@
     async function loadExtras() {
       const { data: u } = await client.auth.getUser(); const uid = u && u.user && u.user.id; if (!uid) return;
       const { data: pf } = await client.from('profiles').select('full_name,phone').eq('id', uid).maybeSingle();
-      if (pf) { $('pfFullName').value = pf.full_name || ''; $('pfPhone').value = pf.phone || ''; $('pfEmail').value = u.user.email || ''; }
+      if (pf) { $('pfHeadName').textContent = pf.full_name || 'Cliente'; $('pfHeadMail').textContent = u.user.email || ''; $('pfFullName').value = pf.full_name || ''; $('pfPhone').value = pf.phone || ''; $('pfEmail').value = u.user.email || ''; }
       const { data: recs, error: re } = await client.from('service_records').select('id,title,notes,performed_at,status,photos,vehicles(make_model,plate)').eq('customer_id', uid).order('performed_at', { ascending: false }).limit(40);
       const day0 = new Date(); day0.setHours(0, 0, 0, 0); const done = [], next = [];
       (recs || []).forEach(r => { if (r.status === 'scheduled') { if (new Date(r.performed_at) >= day0) next.push(r); } else done.push(r); });
@@ -349,7 +354,7 @@
         clear(box); if (re) { status(st, 'Não foi possível carregar agora.', 'error'); return; }
         if (!rows.length) { status(st, empty); return; } $(st).className = 'hidden';
         for (const r of rows) {
-          const it = el('div', 'status'); const d = new Date(r.performed_at);
+          const it = el('div', sched ? 'svc sched' : 'svc'); const d = new Date(r.performed_at);
           it.append(el('strong', null, r.title), el('div', 'small', (sched ? d.toLocaleString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : d.toLocaleDateString('pt-BR')) + (r.vehicles ? ' · ' + r.vehicles.make_model + ' ' + r.vehicles.plate : '')));
           if (r.notes) it.appendChild(el('div', 'small', r.notes));
           if (r.photos && r.photos.length) {
@@ -424,15 +429,16 @@
     $('signOutBtn').addEventListener('click', async () => { if (client) await client.auth.signOut(); document.body.classList.remove('logged', 'keeptab'); curSub = null; $('dashboard').classList.add('hidden'); $('authCard').classList.remove('hidden'); $('signOutBtn').classList.add('hidden'); $('sessionLabel').textContent = 'Acesso do cliente'; status('authStatus', 'Você saiu da sua conta.'); });
     // ---------- Convite de amigo ----------
     (async function () {
-      const ref = localStorage.getItem('ref'); if (!ref || !client) return;
+      const ref = new URLSearchParams(location.search).get('ref'); if (!ref || !client) return;
       $('inviteBanner').classList.remove('hidden');
-      try { const { data } = await client.rpc('referral_inviter', { p_code: ref }); if (data) $('inviteTitle').textContent = '🎁 ' + data + ' convidou você para o clube!'; } catch (_) {}
+      try { const { data } = await client.rpc('referral_inviter', { p_code: ref }); if (data) $('inviteTitle').textContent = data + ' convidou você para o clube!'; } catch (_) {}
       $('inviteBtn').addEventListener('click', () => { $('acesso').scrollIntoView({ behavior: 'smooth' }); setTimeout(() => $('fullName') && $('fullName').focus(), 500); });
     })();
 
     // ---------- Abas do app e perfil ----------
     function setTab(t) { document.body.dataset.tab = t; document.querySelectorAll('#appNav button').forEach(b => b.classList.toggle('on', b.dataset.t === t)); window.scrollTo({ top: 0 }); }
     document.body.dataset.tab = 'inicio';
+    $('ctaPlans').addEventListener('click', () => setTab('planos')); $('logoutRow').addEventListener('click', () => $('signOutBtn').click());
     $('appNav').addEventListener('click', e => { const b = e.target.closest('button[data-t]'); if (b) setTab(b.dataset.t); });
     $('profileForm').addEventListener('submit', async ev => {
       ev.preventDefault(); const { data: u } = await client.auth.getUser(); $('pfStatus').classList.remove('hidden');

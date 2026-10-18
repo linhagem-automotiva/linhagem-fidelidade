@@ -4,4 +4,4 @@
 window.APP_CONFIG = {
   SUPABASE_URL: 'https://knvzkdimamyfrtwrceoj.supabase.co',
   SUPABASE_ANON_KEY: 'sb_publishable_YP5VRbMhpWnxc7_Ms-9fKg_jkqKYGpS'
-};
+REFERRAL_REWARD: 'uma lavagem técnica grátis'};

@@ -1,0 +1,73 @@
+/* Tema v8: moderno, elegante e futurista (compartilhado entre cliente e painel) */
+:root { --bg:#06070a; --surface:#10121a; --surface2:#171a24; --line:#ffffff1a; --text:#F3F4F8; --muted:#9aa0b0; --accent:#E10600; --accentFg:#FF5A4F; --glow:#ff2a1f55; --ok:#5EE6A0; --danger:#FFC24D; --radius:20px; }
+html { scroll-behavior:smooth; }
+body { font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif; background:
+  radial-gradient(900px 480px at 85% -8%,#ff1f1428,transparent 60%),
+  radial-gradient(700px 420px at -10% 30%,#3b0b5a1f,transparent 60%),
+  linear-gradient(#ffffff06 1px,transparent 1px) 0 0/44px 44px,
+  linear-gradient(90deg,#ffffff06 1px,transparent 1px) 0 0/44px 44px, var(--bg); background-attachment:fixed; letter-spacing:.005em; }
+h1,h2,h3,.price,.metric,.brand strong { font-family:"Space Grotesk",Inter,system-ui,sans-serif; letter-spacing:-.02em; }
+.eyebrow { display:inline-flex; align-items:center; gap:8px; color:var(--accentFg); font-size:.7rem; letter-spacing:.22em; font-weight:700; }
+.eyebrow::before { content:""; width:18px; height:2px; border-radius:2px; background:linear-gradient(90deg,var(--accent),transparent); box-shadow:0 0 10px var(--glow); }
+
+/* Vidro */
+.card, .top, header, .installbar { background:linear-gradient(160deg,#ffffff0d,#ffffff04); border:1px solid var(--line); box-shadow:inset 0 1px 0 #ffffff12,0 12px 40px -18px #000; backdrop-filter:blur(14px) saturate(140%); -webkit-backdrop-filter:blur(14px) saturate(140%); }
+.card { border-radius:var(--radius); position:relative; overflow:hidden; transition:transform .25s,border-color .25s,box-shadow .25s; }
+.card:hover { border-color:#ff3b2f55; box-shadow:inset 0 1px 0 #ffffff14,0 16px 44px -16px var(--glow); }
+header, .top { border-radius:0; background:#07080ccc; }
+.plan-featured { border-color:#ff3b2f77; background:linear-gradient(160deg,#ff2a1f22,#ffffff05); box-shadow:0 0 0 1px #ff3b2f33,0 18px 60px -20px var(--glow); }
+.plan-featured::after { content:""; position:absolute; inset:-1px; border-radius:inherit; padding:1px; background:conic-gradient(from var(--a,0deg),transparent 0 70%,#ff5a4f,transparent); -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude; animation:spin 6s linear infinite; pointer-events:none; }
+@property --a { syntax:'<angle>'; initial-value:0deg; inherits:false; }
+@keyframes spin { to { --a:360deg; } }
+
+/* Hero */
+.hero { background:linear-gradient(135deg,#ff2a1f26,#12131a 55%,#2a0f3d33); border:1px solid #ff3b2f40; border-radius:26px; box-shadow:0 30px 80px -30px var(--glow); }
+.hero h1 { font-size:clamp(1.7rem,6vw,3rem); line-height:1.05; background:linear-gradient(90deg,#fff 30%,#ff8a80); -webkit-background-clip:text; background-clip:text; color:transparent; }
+
+/* Botões */
+button { border-radius:14px; font-weight:700; letter-spacing:.01em; background:linear-gradient(135deg,#ff2a1f,#b80000); box-shadow:0 8px 24px -8px var(--glow),inset 0 1px 0 #ffffff33; border:0; }
+button:hover { filter:brightness(1.12); box-shadow:0 12px 30px -8px #ff2a1f99,inset 0 1px 0 #ffffff33; }
+button.secondary, .linkbtn { background:#ffffff0d; border:1px solid var(--line); box-shadow:none; backdrop-filter:blur(8px); }
+button.secondary:hover { border-color:#ff3b2f66; background:#ffffff14; }
+.linkbtn { background:none; border:0; }
+button:disabled { filter:grayscale(.6); box-shadow:none; }
+
+/* Campos */
+input, select { background:#080a0fcc; border:1px solid var(--line); border-radius:14px; transition:border-color .2s,box-shadow .2s; }
+input:focus, select:focus { outline:none; border-color:#ff3b2f; box-shadow:0 0 0 4px #ff2a1f26; }
+
+/* Números e avisos */
+.metric, .price { background:linear-gradient(180deg,#fff,#c9ccd8); -webkit-background-clip:text; background-clip:text; color:transparent; font-variant-numeric:tabular-nums; }
+.status { border-radius:14px; background:#ffffff08; border:1px solid var(--line); border-left:3px solid var(--muted); }
+.status.error { border-left-color:var(--danger); } .status.success { border-left-color:var(--ok); }
+.tag { border-radius:99px; background:#ffffff08; }
+.code { font-family:ui-monospace,"JetBrains Mono",Menlo,monospace; letter-spacing:.3em; text-shadow:0 0 18px var(--glow); }
+.qr { box-shadow:0 0 0 6px #ffffff12,0 0 40px -6px var(--glow); }
+
+/* Menu inferior flutuante (cliente e painel) */
+.appnav, nav.tabs { left:12px; right:12px; bottom:calc(12px + env(safe-area-inset-bottom,0px)); border:1px solid var(--line); border-radius:24px; background:#0b0c12e6; backdrop-filter:blur(18px); box-shadow:0 18px 50px -12px #000,0 0 0 1px #ffffff08; padding-bottom:0; overflow:hidden; }
+.appnav button, nav.tabs button { box-shadow:none; background:transparent; border-radius:18px; margin:5px 2px; min-height:54px; }
+.appnav button.on, nav.tabs button.on { color:#fff; background:linear-gradient(160deg,#ff2a1f33,#ff2a1f0d); box-shadow:inset 0 0 0 1px #ff3b2f55,0 0 22px -6px var(--glow); }
+.appnav button span, nav.tabs button .ic { filter:drop-shadow(0 0 6px #ff2a1f66); }
+body.logged .shell { padding-bottom:110px; } body.logged .installbar { bottom:calc(92px + env(safe-area-inset-bottom,0px)); }
+main { padding-bottom:120px; }
+@media (min-width:900px) {
+  nav.tabs { left:auto; right:auto; bottom:auto; border:0; background:transparent; box-shadow:none; backdrop-filter:none; overflow:visible; }
+  nav.tabs button { background:#ffffff0a; border:1px solid var(--line); margin:0; min-height:44px; }
+  nav.tabs button.on { background:linear-gradient(135deg,#ff2a1f,#b80000); }
+  main { padding-bottom:40px; }
+  .appnav { left:50%; right:auto; transform:translateX(-50%); width:min(520px,92vw); }
+}
+
+/* Ajustes de layout no celular */
+#rolePill { display:none; }
+@media (max-width:760px) {
+  .dash-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+  .dash-grid .card:first-child { grid-column:1/-1; }
+  .dash-grid .card { padding:14px; } .dash-grid .card p:not(#subStatus) { display:none; } .dash-grid .metric { font-size:1.25rem; }
+  #profileSummary { display:none; } .section-head h2 { font-size:1.35rem; }
+  .grid3 { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; } .grid3 .card:first-child { grid-column:1/-1; }
+}
+.invite { border:1px solid #ff3b2f66; background:linear-gradient(135deg,#ff2a1f22,#ffffff06); border-radius:18px; padding:14px 16px; margin:14px 0; }
+.invite strong { display:block; font-family:"Space Grotesk",sans-serif; }
+@media (prefers-reduced-motion:reduce) { .plan-featured::after { animation:none; } html { scroll-behavior:auto; } }

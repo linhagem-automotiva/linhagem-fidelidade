@@ -104,6 +104,8 @@
       button { padding:11px 14px; } footer { margin-top:20px; }
     }
   </style>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap">
+  <link rel="stylesheet" href="./theme.css">
 </head>
 <body>
   <nav id="appNav" class="appnav" aria-label="Menu do app"><button type="button" data-t="inicio" class="on"><span>🏠</span>Início</button><button type="button" data-t="planos"><span>💳</span>Planos</button><button type="button" data-t="servicos"><span>🛠️</span>Serviços</button><button type="button" data-t="perfil"><span>👤</span>Perfil</button></nav>
@@ -121,6 +123,7 @@
       </div>
     </section>
 
+    <div id="inviteBanner" class="invite hidden"><strong id="inviteTitle">Você foi convidado!</strong><span class="small">Crie sua conta pelo botão abaixo e aproveite o programa de fidelidade.</span><div style="margin-top:10px"><button id="inviteBtn" type="button">Criar minha conta</button></div></div>
     <section id="recoverCard" class="card hidden" style="margin-top:20px"><div class="eyebrow">Recuperar acesso</div><h2>Crie uma nova senha</h2><div class="field"><label for="newPass">Nova senha (mínimo 8 caracteres)</label><input id="newPass" type="password" minlength="8" autocomplete="new-password"></div><button id="newPassBtn" type="button">Salvar nova senha</button><div id="recoverStatus" class="status hidden"></div></section>
 
     <section id="planos" data-pane="planos">
@@ -419,6 +422,14 @@
     });
     $('readNoticesBtn').addEventListener('click', async () => { await client.from('notifications').update({ read_at: new Date().toISOString() }).is('read_at', null); refreshCurrent(); });
     $('signOutBtn').addEventListener('click', async () => { if (client) await client.auth.signOut(); document.body.classList.remove('logged', 'keeptab'); curSub = null; $('dashboard').classList.add('hidden'); $('authCard').classList.remove('hidden'); $('signOutBtn').classList.add('hidden'); $('sessionLabel').textContent = 'Acesso do cliente'; status('authStatus', 'Você saiu da sua conta.'); });
+    // ---------- Convite de amigo ----------
+    (async function () {
+      const ref = localStorage.getItem('ref'); if (!ref || !client) return;
+      $('inviteBanner').classList.remove('hidden');
+      try { const { data } = await client.rpc('referral_inviter', { p_code: ref }); if (data) $('inviteTitle').textContent = '🎁 ' + data + ' convidou você para o clube!'; } catch (_) {}
+      $('inviteBtn').addEventListener('click', () => { $('acesso').scrollIntoView({ behavior: 'smooth' }); setTimeout(() => $('fullName') && $('fullName').focus(), 500); });
+    })();
+
     // ---------- Abas do app e perfil ----------
     function setTab(t) { document.body.dataset.tab = t; document.querySelectorAll('#appNav button').forEach(b => b.classList.toggle('on', b.dataset.t === t)); window.scrollTo({ top: 0 }); }
     document.body.dataset.tab = 'inicio';

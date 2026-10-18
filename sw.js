@@ -1,6 +1,6 @@
 // Navegação: rede primeiro (evita ficar preso a uma versão antiga). Dados do Supabase nunca são cacheados.
-const CACHE = 'linhagem-fidelidade-shell-v6';
-const SHELL = ['./', './index.html', './admin.html', './config.js', './termos.html', './privacidade.html', './manifest.webmanifest', './admin.webmanifest', './icon-192.png', './icon-512.png', './logo.png'];
+const CACHE = 'linhagem-fidelidade-shell-v7';
+const SHELL = ['./', './index.html', './admin.html', './config.js', './theme.css', './termos.html', './privacidade.html', './manifest.webmanifest', './admin.webmanifest', './icon-192.png', './icon-512.png', './logo.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL))); self.skipWaiting(); });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))));

@@ -358,6 +358,8 @@
     function serviceForm(s, host, btn) {
       btn.classList.add('hidden'); const f = el('div', 'result'); f.style.borderColor = 'var(--line)'; f.style.background = 'var(--surface2)';
       const [f1, t] = textInput('Serviço realizado (ex.: Polimento completo)', ''); const [f2, n] = textInput('Observações (opcional)', '');
+      const fs = el('div', 'field'); fs.appendChild(el('label', null, 'Situação')); const sel = el('select'); [['done', 'Serviço realizado'], ['scheduled', 'Serviço programado (agenda)']].forEach(([v, l]) => { const o = el('option', null, l); o.value = v; sel.appendChild(o); }); fs.appendChild(sel);
+      const fd = el('div', 'field'); fd.appendChild(el('label', null, 'Data e hora (vazio = agora)')); const dtI = el('input'); dtI.type = 'datetime-local'; fd.appendChild(dtI);
       const fl = el('div', 'field'); fl.appendChild(el('label', null, 'Fotos (antes/depois)')); const fi = el('input'); fi.type = 'file'; fi.accept = 'image/*'; fi.multiple = true; fl.appendChild(fi);
       const go = el('button', null, 'Salvar no histórico'); go.type = 'button'; const cx = el('button', 'secondary', 'Cancelar'); cx.type = 'button'; cx.style.marginLeft = '8px'; const st = el('div', 'status hidden');
       cx.addEventListener('click', () => { f.remove(); btn.classList.remove('hidden'); });
@@ -367,11 +369,11 @@
         try {
           const uid = (await client.auth.getUser()).data.user.id, rid = crypto.randomUUID(), paths = [];
           for (const [i, file] of [...fi.files].slice(0, 8).entries()) { const p = s.customer_id + '/' + rid + '/' + i + '.jpg'; const up = await client.storage.from('service-photos').upload(p, await shrink(file), { contentType: 'image/jpeg' }); if (up.error) throw up.error; paths.push(p); }
-          const ins = await client.from('service_records').insert({ id: rid, customer_id: s.customer_id, vehicle_id: s.vehicle_id, title: t.value.trim(), notes: n.value.trim() || null, photos: paths, created_by: uid });
+          const ins = await client.from('service_records').insert({ id: rid, customer_id: s.customer_id, vehicle_id: s.vehicle_id, title: t.value.trim(), notes: n.value.trim() || null, status: sel.value, performed_at: dtI.value ? new Date(dtI.value).toISOString() : new Date().toISOString(), photos: paths, created_by: uid });
           if (ins.error) throw ins.error; f.remove(); btn.classList.remove('hidden'); btn.textContent = '✓ Serviço registrado';
-        } catch (e) { st.className = 'status error'; st.textContent = 'Erro: ' + (e.message || e) + ' (rode o SQL 005 se ainda não rodou)'; go.disabled = false; }
+        } catch (e) { st.className = 'status error'; st.textContent = 'Erro: ' + (e.message || e) + ' (confira se rodou os SQLs 005 e 006)'; go.disabled = false; }
       });
-      f.append(f1, f2, fl, go, cx, st); host.appendChild(f);
+      f.append(f1, f2, fs, fd, fl, go, cx, st); host.appendChild(f);
     }
     $('cliSearch').addEventListener('input', renderClients);
     $('reloadCli').addEventListener('click', loadClients);

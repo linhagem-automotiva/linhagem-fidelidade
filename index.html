@@ -79,6 +79,7 @@
     .check input { width:20px; height:20px; margin-top:2px; flex:none; accent-color:var(--accent); }
     .linkbtn { background:none; border:0; color:var(--accentFg); padding:6px 0; font-weight:600; text-decoration:underline; min-height:0; }
     @media(max-width:760px){ header{margin:0 -20px;} }
+    .thumbs { display:grid; grid-template-columns:repeat(auto-fill,minmax(84px,1fr)); gap:6px; margin-top:8px; } .thumbs img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:10px; display:block; }
     /* ---- Celular: tudo mais compacto ---- */
     body { font-size:15px; }
     body.logged .hero, body.logged #acesso { display:none; }
@@ -127,6 +128,7 @@
       <article class="card" id="authCard"><div class="eyebrow">Área do cliente</div><h2>Entre ou crie sua conta</h2><p>Use seu e-mail para acessar os dados vinculados ao seu cadastro.</p>
         <form id="authForm">
           <div class="field"><label for="fullName">Nome completo (para cadastro)</label><input id="fullName" autocomplete="name" placeholder="Seu nome" /></div>
+          <div class="field"><label for="phone">WhatsApp (opcional)</label><input id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(53) 99999-9999" /></div>
           <div class="field"><label for="email">E-mail</label><input id="email" type="email" autocomplete="email" required placeholder="voce@email.com" /></div>
           <div class="field"><label for="password">Senha</label><input id="password" type="password" autocomplete="current-password" minlength="8" required placeholder="Mínimo de 8 caracteres" /></div>
           <label class="check"><input id="terms" type="checkbox"><span>Li e aceito os <a href="./termos.html" target="_blank" rel="noopener">Termos de Uso</a> e a <a href="./privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a> (necessário para criar conta).</span></label>
@@ -145,6 +147,8 @@
       <div id="benefitsStatus" class="status">Seus benefícios aparecem aqui quando a assinatura estiver ativa.</div>
       <div id="benefitsList" class="bgrid"></div>
       <div class="auth"><article class="card"><h2>Meu veículo</h2><form id="vehicleForm"><div class="field"><label for="vehicleName">Marca e modelo</label><input id="vehicleName" required placeholder="Ex.: VW Nivus" /></div><div class="field"><label for="vehiclePlate">Placa</label><input id="vehiclePlate" required maxlength="8" placeholder="ABC1D23" autocapitalize="characters" /></div><div class="field"><label for="vehicleColor">Cor</label><input id="vehicleColor" placeholder="Cor do veículo" /></div><button type="submit">Salvar veículo</button></form><div id="vehicleStatus" class="status">Seus veículos aparecerão aqui.</div><div id="vehicleList"></div></article><article class="card"><h2>Mensalidades</h2><div id="paymentsList"></div><div id="paymentsStatus" class="status">Nenhum pagamento disponível.</div></article></div>
+      <article class="card" style="margin-top:14px"><div class="eyebrow">Histórico</div><h2>Serviços no meu carro</h2><div id="historyList"></div><div id="historyStatus" class="status">Carregando...</div></article>
+      <article class="card" style="margin-top:14px"><div class="eyebrow">Indique e ganhe</div><h2>Convide um amigo</h2><p id="refText">Quando um amigo assinar e pagar, você ganha uma recompensa.</p><div class="row"><span id="refCode" class="tag available">—</span><span id="refCount" class="small"></span></div><button id="refShare" type="button" style="margin-top:12px">Compartilhar convite</button></article>
     </section>
     <footer>LINHAGEM AUTOMOTIVA · Programa de fidelidade</footer>
   </main>
@@ -182,6 +186,7 @@
     const upper = v => v.trim().replace(/\s+/g, ' ').toLocaleUpperCase('pt-BR');
     const every = d => d % 365 === 0 ? (d === 365 ? '1 ano' : (d / 365) + ' anos') : d % 30 === 0 ? (d === 30 ? '1 mês' : (d / 30) + ' meses') : d + ' dias';
     const STATUS_PT = { pending: 'Aguardando pagamento', active: 'Ativa', past_due: 'Pagamento em atraso', paused: 'Pausada', cancelled: 'Cancelada', expired: 'Expirada' };
+    try { const r0 = new URLSearchParams(location.search).get('ref'); if (r0) localStorage.setItem('ref', r0.toUpperCase().slice(0, 12)); } catch (_) {}
     let vehiclesCache = [], curSub = null;
     async function callFn(name, body) {
       const { data, error } = await client.functions.invoke(name, { body });
@@ -263,7 +268,7 @@
     }
     async function refreshDashboard(user) {
       const profile = await getProfile(user);
-      document.body.classList.add('logged'); $('authCard').classList.add('hidden'); $('dashboard').classList.remove('hidden'); $('signOutBtn').classList.remove('hidden');
+      document.body.classList.add('logged'); loadExtras().catch(() => {}); $('authCard').classList.add('hidden'); $('dashboard').classList.remove('hidden'); $('signOutBtn').classList.remove('hidden');
       $('sessionLabel').textContent = user.email || 'Conta conectada'; $('welcome').textContent = 'Olá, ' + (profile.full_name || 'cliente') + '!'; $('profileSummary').textContent = user.email || '';
       $('rolePill').textContent = profile.role === 'admin' ? 'Administrador' : 'Cliente'; $('adminLink').classList.toggle('hidden', profile.role !== 'admin');
 
@@ -317,6 +322,32 @@
       else { $('paymentsStatus').classList.add('hidden'); payments.forEach(p => pl.appendChild(el('div', 'status', money(p.amount_cents) + ' · ' + p.status + (p.paid_at ? ' · ' + new Date(p.paid_at).toLocaleDateString('pt-BR') : '')))); }
 
     }
+    async function loadExtras() {
+      const { data: recs } = await client.from('service_records').select('id,title,notes,performed_at,photos,vehicles(make_model,plate)').order('performed_at', { ascending: false }).limit(20);
+      const box = $('historyList'); clear(box);
+      if (!recs || !recs.length) status('historyStatus', 'Os serviços feitos no seu carro aparecem aqui, com fotos.');
+      else {
+        $('historyStatus').classList.add('hidden');
+        for (const r of recs) {
+          const it = el('div', 'status'); it.append(el('strong', null, r.title), el('div', 'small', new Date(r.performed_at).toLocaleDateString('pt-BR') + (r.vehicles ? ' · ' + r.vehicles.make_model + ' ' + r.vehicles.plate : '')));
+          if (r.notes) it.appendChild(el('div', 'small', r.notes));
+          if (r.photos && r.photos.length) {
+            const { data: urls } = await client.storage.from('service-photos').createSignedUrls(r.photos, 3600); const g = el('div', 'thumbs');
+            (urls || []).forEach(u => { if (!u.signedUrl) return; const a = el('a'); a.href = u.signedUrl; a.target = '_blank'; a.rel = 'noopener'; const im = el('img'); im.src = u.signedUrl; im.loading = 'lazy'; im.alt = 'Foto do serviço'; a.appendChild(im); g.appendChild(a); });
+            it.appendChild(g);
+          }
+          box.appendChild(it);
+        }
+      }
+      const { data: rf } = await client.rpc('my_referrals'); const x = rf && rf[0];
+      if (x) {
+        const reward = (window.APP_CONFIG && window.APP_CONFIG.REFERRAL_REWARD) || 'uma recompensa';
+        const link = location.origin + location.pathname + '?ref=' + x.out_code;
+        $('refCode').textContent = x.out_code; $('refText').textContent = 'Quando um amigo seu assinar e pagar a primeira mensalidade, você ganha ' + reward + '.';
+        $('refCount').textContent = x.out_total + ' indicado(s) · ' + x.out_active + ' ativo(s)';
+        $('refShare').onclick = () => { const t = 'Conheça o clube de fidelidade da Linhagem Automotiva! Cadastre-se pelo meu convite: ' + link; if (navigator.share) navigator.share({ text: t }).catch(() => {}); else window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank'); };
+      }
+    }
     async function refreshCurrent() {
       if (!client) return; const { data: { user } } = await client.auth.getUser();
       if (user) try { await refreshDashboard(user); } catch (e) { status('authStatus', e.message, 'error'); }
@@ -338,7 +369,7 @@
         if (mode === 'signup') {
           if (!$('terms').checked) { status('authStatus', 'Aceite os Termos de Uso e a Política de Privacidade para criar a conta.', 'error'); return; }
           const full_name = upper($('fullName').value || '');
-          result = await client.auth.signUp({ email, password, options: { data: { full_name } } });
+          result = await client.auth.signUp({ email, password, options: { emailRedirectTo: location.origin + location.pathname, data: { full_name, phone: ($('phone').value || '').replace(/[^0-9+]/g, '') || undefined, ref: localStorage.getItem('ref') || undefined } } });
           if (result.error) throw result.error;
           if (!result.data.session) { status('authStatus', 'Cadastro criado. Verifique seu e-mail para confirmar a conta e depois entre.', 'success'); return; }
         } else { result = await client.auth.signInWithPassword({ email, password }); if (result.error) throw result.error; }

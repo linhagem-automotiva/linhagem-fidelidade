@@ -166,6 +166,7 @@
           <article class="card"><span class="small">Assinaturas</span><div class="metric" id="admSubs">—</div><p class="small" id="admSubsNote" style="margin:0"></p></article>
           <article class="card"><span class="small">Baixas nos últimos 30 dias</span><div class="metric" id="admRed">—</div><p class="small" id="admCost" style="margin:0"></p></article>
         </div>
+        <article class="card" style="margin-bottom:16px"><h2>Indicações</h2><p class="small">Quem mais indicou amigos (ativos = com assinatura em dia). Entregue a recompensa combinada.</p><div id="refReport"></div></article>
         <article class="card">
           <h2>Custo dos benefícios por plano</h2>
           <p class="small">Custo mensal estimado = custo de cada benefício dividido pelo ciclo, comparado com a mensalidade e o teto do plano.</p>
@@ -263,7 +264,7 @@
       window.scrollTo({ top: 0 });
       if (name === 'balcao') loadRecent();
       if (name === 'clientes' && !loaded.cli) { loaded.cli = true; loadClients(); }
-      if (name === 'resumo') loadSummary();
+      if (name === 'resumo') { loadSummary(); loadRefs(); }
       if (name === 'ajustes' && !loaded.aj) { loaded.aj = true; loadSettings(); loadTeam(); }
     }
     $('tabs').addEventListener('click', e => { const b = e.target.closest('button[data-tab]'); if (b) showTab(b.dataset.tab); });
@@ -324,7 +325,7 @@
     async function loadClients() {
       status('cliStatus', 'Carregando...');
       const { data, error } = await client.from('subscriptions')
-        .select('id,customer_id,status,started_at,created_at,profiles(full_name,phone),plans(name),vehicles(make_model,plate)')
+        .select('id,customer_id,vehicle_id,status,started_at,created_at,profiles(full_name,phone),plans(name),vehicles(make_model,plate)')
         .order('created_at', { ascending: false }).limit(500);
       if (error) { status('cliStatus', 'Não foi possível carregar: ' + error.message, 'error'); return; }
       const seen = new Set(); clientsCache = [];
@@ -347,8 +348,30 @@
         const days = s.started_at ? Math.floor((Date.now() - new Date(s.started_at).getTime()) / 86400000) : null;
         it.append(top, el('div', 'small', (s.plans?.name || 'Sem plano') + (days != null ? ' · ' + days + ' dias de fidelidade' : '') + (s.vehicles ? ' · ' + s.vehicles.make_model + ' ' + s.vehicles.plate : ' · sem veículo vinculado')));
         if (s.profiles?.phone) { const p = el('div', 'small'); const a = el('a', null, s.profiles.phone); a.href = 'tel:' + s.profiles.phone.replace(/[^0-9+]/g, ''); p.append('Telefone: ', a); it.appendChild(p); }
-        list.appendChild(it);
+        const acts = el('div', 'row'); acts.style.marginTop = '8px';
+        const ob = el('button', 'secondary', '📷 Registrar serviço'); ob.type = 'button'; ob.addEventListener('click', () => serviceForm(s, it, ob)); acts.appendChild(ob);
+        if (s.profiles?.phone) { let d = s.profiles.phone.replace(/\D/g, ''); if (d.length <= 11) d = '55' + d; const w = el('a', null, '💬 WhatsApp'); w.href = 'https://wa.me/' + d; w.target = '_blank'; w.rel = 'noopener'; w.style.padding = '12px 6px'; acts.appendChild(w); }
+        it.appendChild(acts); list.appendChild(it);
       });
+    }
+    function shrink(file) { return new Promise((ok, no) => { const im = new Image(), u = URL.createObjectURL(file); im.onload = () => { const k = Math.min(1, 1280 / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(u); c.toBlob(b => b ? ok(b) : no(new Error('Imagem inválida')), 'image/jpeg', 0.75); }; im.onerror = () => no(new Error('Não foi possível ler a foto')); im.src = u; }); }
+    function serviceForm(s, host, btn) {
+      btn.classList.add('hidden'); const f = el('div', 'result'); f.style.borderColor = 'var(--line)'; f.style.background = 'var(--surface2)';
+      const [f1, t] = textInput('Serviço realizado (ex.: Polimento completo)', ''); const [f2, n] = textInput('Observações (opcional)', '');
+      const fl = el('div', 'field'); fl.appendChild(el('label', null, 'Fotos (antes/depois)')); const fi = el('input'); fi.type = 'file'; fi.accept = 'image/*'; fi.multiple = true; fl.appendChild(fi);
+      const go = el('button', null, 'Salvar no histórico'); go.type = 'button'; const cx = el('button', 'secondary', 'Cancelar'); cx.type = 'button'; cx.style.marginLeft = '8px'; const st = el('div', 'status hidden');
+      cx.addEventListener('click', () => { f.remove(); btn.classList.remove('hidden'); });
+      go.addEventListener('click', async () => {
+        if (!t.value.trim()) { st.className = 'status error'; st.textContent = 'Informe o serviço.'; return; }
+        go.disabled = true; st.className = 'status'; st.textContent = 'Enviando fotos...';
+        try {
+          const uid = (await client.auth.getUser()).data.user.id, rid = crypto.randomUUID(), paths = [];
+          for (const [i, file] of [...fi.files].slice(0, 8).entries()) { const p = s.customer_id + '/' + rid + '/' + i + '.jpg'; const up = await client.storage.from('service-photos').upload(p, await shrink(file), { contentType: 'image/jpeg' }); if (up.error) throw up.error; paths.push(p); }
+          const ins = await client.from('service_records').insert({ id: rid, customer_id: s.customer_id, vehicle_id: s.vehicle_id, title: t.value.trim(), notes: n.value.trim() || null, photos: paths, created_by: uid });
+          if (ins.error) throw ins.error; f.remove(); btn.classList.remove('hidden'); btn.textContent = '✓ Serviço registrado';
+        } catch (e) { st.className = 'status error'; st.textContent = 'Erro: ' + (e.message || e) + ' (rode o SQL 005 se ainda não rodou)'; go.disabled = false; }
+      });
+      f.append(f1, f2, fl, go, cx, st); host.appendChild(f);
     }
     $('cliSearch').addEventListener('input', renderClients);
     $('reloadCli').addEventListener('click', loadClients);
@@ -368,6 +391,12 @@
         [r.out_name, money(r.out_price_cents), money(r.out_monthly_cost_cents), r.out_percent + '%', r.out_cap + '%' + (r.out_over_cap ? ' · acima do teto' : '')].forEach((t, i) => tr.appendChild(el('td', i === 4 && r.out_over_cap ? 'over' : null, t)));
         tb.appendChild(tr);
       });
+    }
+    async function loadRefs() {
+      const { data, error } = await client.rpc('admin_referral_report'); const b = $('refReport'); clear(b);
+      if (error) { b.appendChild(el('div', 'status', 'Rode o SQL 005 para ativar as indicações.')); return; }
+      if (!data.length) { b.appendChild(el('div', 'status', 'Nenhuma indicação ainda.')); return; }
+      data.forEach(r => { const it = el('div', 'item row between'); it.append(el('span', 't', r.out_name || 'Cliente'), el('span', 'small', r.out_total + ' indicado(s) · ' + r.out_active + ' ativo(s)')); b.appendChild(it); });
     }
     $('reloadSum').addEventListener('click', loadSummary);
 

@@ -198,6 +198,8 @@
       ALREADY_SUBSCRIBED: 'Você já tem uma assinatura. Cancele a atual antes de assinar outro plano.',
       NOT_AUTHENTICATED: 'Entre na sua conta para continuar.',
       PLAN_NOT_FOUND: 'Plano indisponível no momento.',
+      MP_SAME_USER: 'O e-mail desta conta é o mesmo da conta que recebe os pagamentos. Em testes, use a conta compradora de teste.',
+      MP_PAYER: 'O Mercado Pago não aceitou este e-mail para pagar. Em testes, entre no app com o e-mail da conta compradora de teste. Para clientes reais, use o mesmo e-mail da conta Mercado Pago de quem paga.',
       MP_ERROR: 'Não foi possível falar com o Mercado Pago. Tente novamente em instantes.',
       NOT_CONFIGURED: 'Pagamento ainda não configurado pela oficina.',
       TOO_MANY_CODES: 'Muitos códigos gerados em pouco tempo. Tente novamente mais tarde.'
@@ -212,7 +214,7 @@
     let vehiclesCache = [], curSub = null;
     async function callFn(name, body) {
       const { data, error } = await client.functions.invoke(name, { body });
-      if (error) { let m = error.message; try { const j = await error.context.json(); m = j.error || m; } catch (_) {} throw new Error(m); }
+      if (error) { let m = error.message; try { const j = await error.context.json(); m = j.error || m; const d = String(j.mp_message || '').toLowerCase(); if (j.error === 'MP_ERROR' && j.mp_status === 400) m = d.includes('same user') ? 'MP_SAME_USER' : 'MP_PAYER'; } catch (_) {} throw new Error(m); }
       return data;
     }
     async function subscribe(code, name) {
@@ -238,7 +240,7 @@
     // ---------- Planos públicos (lidos do banco) ----------
     async function loadPlans() {
       if (!client) return;
-      const { data, error } = await client.from('plans').select('code,name,monthly_price_cents,description,benefits(name,unlock_days,cycle_days,active)').eq('active', true).order('monthly_price_cents');
+      const { data, error } = await client.from('plans').select('code,name,monthly_price_cents,points_per_payment,description,benefits(name,unlock_days,cycle_days,active)').eq('active', true).order('monthly_price_cents');
       if (error || !data || !data.length) return;
       const grid = $('plansGrid'); clear(grid);
       data.forEach((p, i) => {
@@ -252,7 +254,7 @@
         const sb = el('button', mine ? 'secondary' : null, mine ? (curSub.plans?.name === p.name ? 'Seu plano atual' : 'Trocar para ' + p.name) : 'Assinar ' + p.name);
         if (mine && curSub.plans?.name === p.name) sb.disabled = true; sb.type = 'button'; sb.addEventListener('click', () => subscribe(p.code, p.name));
         const hd = el('div', 'plan-hd'); const cr = el('span', 'crown'); cr.innerHTML = "<svg viewBox='0 0 24 24' aria-hidden='true'><path d='M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z'/></svg>"; hd.append(cr, el('h3', null, p.name));
-        card.append(hd, price, el('p', null, p.description), ul, sb);
+        card.append(hd, price, el('p', null, p.description), el('p', 'small ptsline', '★ Ganhe ' + (p.points_per_payment || 0).toLocaleString('pt-BR') + ' pontos a cada mensalidade paga'), ul, sb);
         grid.appendChild(card);
       });
     }
@@ -353,7 +355,9 @@
       ((p && p.out_history) || []).slice(0, 3).forEach(x => h.appendChild(el('div', 'small', (x.delta > 0 ? '+' : '') + x.delta + ' pts · ' + (REASON[x.reason] || x.reason) + ' · ' + new Date(x.at).toLocaleDateString('pt-BR'))));
       const { data: rw } = await client.from('rewards').select('id,name,description,cost_points').eq('active', true).order('cost_points'); const rl = $('rewardList'); clear(rl);
       (rw || []).forEach(r => {
-        const it = el('div', 'svc rw'); it.append(el('strong', null, r.name), el('div', 'small', (r.description || '') + ' · ' + r.cost_points.toLocaleString('pt-BR') + ' pts'));
+        const IMG = /lavagem/i.test(r.name) ? 'lavagem' : /polimento/i.test(r.name) ? 'polimento' : /retoque|arranh/i.test(r.name) ? 'retoque' : null;
+        const it = el('div', IMG ? 'svc rw has-img' : 'svc rw'); if (IMG) { const im = el('img', 'rwimg'); im.src = './img/' + IMG + '.jpg'; im.alt = r.name; im.loading = 'lazy'; it.appendChild(im); }
+        it.append(el('strong', null, r.name), el('div', 'small', (r.description || '') + ' · ' + r.cost_points.toLocaleString('pt-BR') + ' pts'));
         const b = el('button', bal >= r.cost_points ? null : 'secondary', 'Trocar por ' + r.cost_points.toLocaleString('pt-BR') + ' pts'); b.type = 'button'; b.disabled = bal < r.cost_points;
         b.addEventListener('click', async () => {
           if (!confirm('Trocar ' + r.cost_points + ' pontos por "' + r.name + '"? Os pontos só são descontados quando a oficina validar o código.')) return;

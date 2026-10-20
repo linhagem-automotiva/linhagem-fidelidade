@@ -217,7 +217,12 @@
       if (error) { let m = error.message; try { const j = await error.context.json(); m = j.error || m; const d = String(j.mp_message || '').toLowerCase(); if (j.error === 'MP_ERROR' && j.mp_status === 400) m = d.includes('same user') ? 'MP_SAME_USER' : 'MP_PAYER'; } catch (_) {} throw new Error(m); }
       return data;
     }
+    let subscribing = false;
     async function subscribe(code, name) {
+      if (subscribing) return; subscribing = true;
+      try { await subscribeRun(code, name); } finally { subscribing = false; $('planStatus').scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+    }
+    async function subscribeRun(code, name) {
       if (!client) { status('planStatus', 'Ainda não configurado.', 'error'); return; }
       const { data: { session } } = await client.auth.getSession();
       if (!session) { status('authStatus', 'Entre ou crie sua conta para assinar o plano ' + name + '.', 'error'); $('acesso').scrollIntoView({ behavior: 'smooth' }); return; }

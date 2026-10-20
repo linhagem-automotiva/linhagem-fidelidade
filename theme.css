@@ -151,3 +151,5 @@ body.logged header { display:none; } body.logged .shell { padding-top:calc(8px +
 
 .homehero .fid { margin-top:10px; }
 @media (max-width:760px) { .homehero { background-position:0% 40%, 0% 40%; } }
+
+button { scroll-margin-bottom:110px; }

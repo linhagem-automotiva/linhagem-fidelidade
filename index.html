@@ -298,10 +298,10 @@
       $('sessionLabel').textContent = user.email || 'Conta conectada'; $('welcome').textContent = 'Olá, ' + (profile.full_name || 'cliente') + '!'; $('profileSummary').textContent = user.email || '';
       $('rolePill').textContent = profile.role === 'admin' ? 'Administrador' : 'Cliente'; $('adminLink').classList.toggle('hidden', profile.role !== 'admin');
 
-      const { data: subs, error: subsError } = await client.from('subscriptions').select('id,status,started_at,vehicle_id,plans(name,monthly_price_cents)').order('created_at', { ascending: false }).limit(1);
+      const { data: subs, error: subsError } = await client.from('subscriptions').select('id,status,started_at,vehicle_id,plans(name,monthly_price_cents)').or('started_at.not.is.null,status.neq.cancelled').order('created_at', { ascending: false }).limit(1);
       if (subsError) throw subsError;
       const sub = subs && subs[0]; const hadSub = curSub && curSub.status; curSub = sub || null; if (hadSub !== (sub && sub.status)) loadPlans();
-      const dead = !sub || ['cancelled', 'expired'].includes(sub.status); $('currentPlan').textContent = dead ? 'Sem plano ativo' : sub.plans?.name; $('subStatus').textContent = sub ? 'Situação: ' + (STATUS_PT[sub.status] || sub.status) : 'Nenhuma assinatura vinculada';
+      const dead = !sub || ['cancelled', 'expired'].includes(sub.status); $('currentPlan').textContent = dead ? 'Sem plano ativo' : sub.plans?.name; $('subStatus').textContent = dead ? (sub ? 'Assinatura encerrada. Escolha um plano na aba Planos.' : 'Escolha um plano na aba Planos para começar.') : sub ? 'Situação: ' + (STATUS_PT[sub.status] || sub.status) : 'Nenhuma assinatura vinculada';
       $('cancelSubBtn').classList.toggle('hidden', !(sub && ['pending', 'active', 'past_due', 'paused'].includes(sub.status)));
       const days = sub?.started_at ? Math.max(0, Math.floor((Date.now() - new Date(sub.started_at).getTime()) / 86400000)) : 0;
       $('monthsActive').textContent = days + ' dias';
@@ -356,7 +356,7 @@
       const { data: rw } = await client.from('rewards').select('id,name,description,cost_points').eq('active', true).order('cost_points'); const rl = $('rewardList'); clear(rl);
       (rw || []).forEach(r => {
         const IMG = /lavagem/i.test(r.name) ? 'lavagem' : /polimento/i.test(r.name) ? 'polimento' : /retoque|arranh/i.test(r.name) ? 'retoque' : null;
-        const it = el('div', IMG ? 'svc rw has-img' : 'svc rw'); if (IMG) { const im = el('img', 'rwimg'); im.src = './img/' + IMG + '.jpg'; im.alt = r.name; im.loading = 'lazy'; it.appendChild(im); }
+        const it = el('div', IMG ? 'svc rw has-img' : 'svc rw'); if (IMG) { const im = el('img', 'rwimg'); im.alt = r.name; im.loading = 'lazy'; im.onerror = () => { im.remove(); it.classList.remove('has-img'); }; im.src = './premio-' + IMG + '.jpg'; it.appendChild(im); }
         it.append(el('strong', null, r.name), el('div', 'small', (r.description || '') + ' · ' + r.cost_points.toLocaleString('pt-BR') + ' pts'));
         const b = el('button', bal >= r.cost_points ? null : 'secondary', 'Trocar por ' + r.cost_points.toLocaleString('pt-BR') + ' pts'); b.type = 'button'; b.disabled = bal < r.cost_points;
         b.addEventListener('click', async () => {

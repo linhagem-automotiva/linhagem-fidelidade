@@ -355,7 +355,7 @@
       ((p && p.out_history) || []).slice(0, 3).forEach(x => h.appendChild(el('div', 'small', (x.delta > 0 ? '+' : '') + x.delta + ' pts · ' + (REASON[x.reason] || x.reason) + ' · ' + new Date(x.at).toLocaleDateString('pt-BR'))));
       const { data: rw } = await client.from('rewards').select('id,name,description,cost_points').eq('active', true).order('cost_points'); const rl = $('rewardList'); clear(rl);
       (rw || []).forEach(r => {
-        const IMG = /lavagem/i.test(r.name) ? 'lavagem' : /polimento/i.test(r.name) ? 'polimento' : /retoque|arranh/i.test(r.name) ? 'retoque' : null;
+        const IMG = /cristaliza/i.test(r.name) ? 'cristalizacao' : /far[oó]is|farol|revitaliza/i.test(r.name) ? 'farois' : /lavagem/i.test(r.name) ? 'lavagem' : /polimento.*completo|completo.*polimento/i.test(r.name) ? 'polimento-completo' : /polimento/i.test(r.name) ? 'polimento' : /retoque|arranh/i.test(r.name) ? 'retoque' : null;
         const it = el('div', IMG ? 'svc rw has-img' : 'svc rw'); if (IMG) { const im = el('img', 'rwimg'); im.alt = r.name; im.loading = 'lazy'; im.onerror = () => { im.remove(); it.classList.remove('has-img'); }; im.src = './premio-' + IMG + '.jpg'; it.appendChild(im); }
         it.append(el('strong', null, r.name), el('div', 'small', (r.description || '') + ' · ' + r.cost_points.toLocaleString('pt-BR') + ' pts'));
         const b = el('button', bal >= r.cost_points ? null : 'secondary', 'Trocar por ' + r.cost_points.toLocaleString('pt-BR') + ' pts'); b.type = 'button'; b.disabled = bal < r.cost_points;

@@ -153,3 +153,18 @@ body.logged header { display:none; } body.logged .shell { padding-top:calc(8px +
 @media (max-width:760px) { .homehero { background-position:0% 40%, 0% 40%; } }
 
 button { scroll-margin-bottom:110px; }
+
+/* Revisão: topo sem logo cortado, prêmios compactos, próximo serviço */
+.homehero { background:linear-gradient(90deg,transparent 40%,#050506f2 100%),linear-gradient(180deg,#050506d9 0%,#05050626 38%,#050506 100%),url(./hero.jpg) 0% 40%/cover no-repeat; }
+#nextHome { color:#e8e9ee; font-size:.88rem; margin:6px 0 0; } #nextHome:empty { display:none; }
+#rewardList { display:grid; grid-template-columns:1fr 1fr; gap:10px; } #rewardList .svc.rw { margin-top:0; } #rewardList .svc.rw:not(.has-img) { grid-column:1 / -1; }
+.svc.rw .rwimg { height:88px; } .svc.rw strong { font-size:.9rem; } .svc.rw .small { font-size:.76rem; } .svc.rw button { font-size:.78rem; padding:9px 6px; min-height:40px; }
+.svc.rw.has-img > * { margin-left:10px; margin-right:10px; }
+
+/* Como funciona + pontos nos planos */
+.how { margin:22px 0 6px; } .how h2 { margin:6px 0 12px; } .steps { display:grid; gap:10px; } body.logged .how { display:none; }
+.step { display:grid; grid-template-columns:42px 1fr; gap:2px 14px; align-items:center; padding:14px; border:1px solid #1c1e26; border-radius:16px; background:#0c0d11; }
+.step b { grid-row:1 / span 2; width:42px; height:42px; border-radius:50%; display:grid; place-items:center; font-family:"Space Grotesk",sans-serif; background:linear-gradient(135deg,#dc1a12,#a30c0c); box-shadow:0 8px 20px -10px #e10b0b; }
+.step strong { font-size:1.02rem; } .step span { color:#9aa0b0; font-size:.88rem; line-height:1.4; }
+@media (min-width:760px) { .steps { grid-template-columns:repeat(3,1fr); } }
+.ptsbig { font-family:"Space Grotesk",sans-serif; font-size:1.25rem; font-weight:700; color:#e9c36a; margin:2px 0 8px; } .ptsexp { color:#ffc24d; margin-top:4px; }

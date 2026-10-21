@@ -108,7 +108,7 @@
   <link rel="stylesheet" href="./theme.css">
 </head>
 <body>
-  <nav id="appNav" class="appnav" aria-label="Menu do app"><button type="button" data-t="inicio" class="on"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Início</button><button type="button" data-t="planos"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg>Planos</button><button type="button" data-t="servicos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/></svg>Serviços</button><button type="button" data-t="perfil"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Perfil</button></nav>
+  <nav id="appNav" class="appnav" aria-label="Menu do app"><button type="button" data-t="inicio" class="on"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Início</button><button type="button" data-t="planos"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg>Planos</button><button type="button" data-t="servicos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/></svg>Serviços</button><button type="button" data-t="loja"><svg viewBox='0 0 24 24' aria-hidden='true'><path d='M5 8h14l-1 12H6z'/><path d='M9 8a3 3 0 0 1 6 0'/></svg>Loja</button><button type="button" data-t="perfil"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Perfil</button></nav>
   <div id="installBar" class="installbar hidden"><p id="installMsg">Instale o app na tela inicial.</p><div class="row"><button id="installBtn" type="button">Instalar</button><button id="installClose" type="button" class="secondary" aria-label="Fechar">✕</button></div></div>
   <main class="shell">
     <header>
@@ -130,7 +130,7 @@
       <div class="step"><b>1</b><strong>Assine</strong><span>Escolha o plano que cabe no seu bolso e pague a mensalidade pelo Mercado Pago.</span></div>
       <div class="step"><b>2</b><strong>Acumule</strong><span>Ganhe pontos a cada mensalidade paga e por cada amigo que indicar. Também dá para comprar pontos.</span></div>
       <div class="step"><b>3</b><strong>Troque</strong><span>Use os pontos em serviços da oficina, como lavagem técnica, polimento e revitalização de faróis.</span></div></div>
-      <p class="small">Seus pontos têm validade e você acompanha o vencimento no app.</p></section>
+      <p class="small">Seus pontos têm validade e você acompanha o vencimento no app. <b>Todos os serviços são realizados mediante avaliação do veículo.</b></p></section>
     <section id="planos" data-pane="planos">
       <div class="section-head"><div><div class="eyebrow">Escolha seu plano</div><h2>Uma experiência para cada motorista</h2></div></div>
       <div id="planStatus" class="status hidden"></div>
@@ -164,14 +164,15 @@
       <article id="noticeBox" data-pane="inicio" class="card hidden"><h2>Avisos</h2><div id="noticeList"></div><button id="readNoticesBtn" type="button" class="secondary">Marcar como lidos</button></article>
       
       <div class="pfhead" data-pane="perfil"><div class="avatar"><svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='8' r='4'/><path d='M4 21a8 8 0 0 1 16 0'/></svg></div><div><strong id="pfHeadName">—</strong><span id="pfHeadMail"></span></div></div>
-      <article class="card" data-pane="perfil" style="margin-bottom:14px"><div class="eyebrow">Meus dados</div><form id="profileForm"><div class="field"><label for="pfFullName">Nome completo</label><input id="pfFullName" required></div><div class="field"><label for="pfEmail">E-mail</label><input id="pfEmail" disabled></div><div class="field"><label for="pfPhone">WhatsApp</label><input id="pfPhone" type="tel" inputmode="tel" placeholder="(53) 99999-9999"></div><button type="submit">Salvar dados</button></form><div id="pfStatus" class="status hidden"></div></article>
-      <div class="auth" data-pane="perfil"><article class="card"><h2>Meu veículo</h2><form id="vehicleForm"><div class="field"><label for="vehicleName">Marca e modelo</label><input id="vehicleName" required placeholder="Ex.: VW Nivus" /></div><div class="field"><label for="vehiclePlate">Placa</label><input id="vehiclePlate" required maxlength="8" placeholder="ABC1D23" autocapitalize="characters" /></div><div class="field"><label for="vehicleColor">Cor</label><input id="vehicleColor" placeholder="Cor do veículo" /></div><button type="submit">Salvar veículo</button></form><div id="vehicleStatus" class="status">Seus veículos aparecerão aqui.</div><div id="vehicleList"></div></article><article class="card"><h2>Mensalidades</h2><div id="paymentsList"></div><div id="paymentsStatus" class="status">Nenhum pagamento disponível.</div></article></div>
+      <div class="seg" data-pane="perfil"><button type="button" data-s="dados" class="on">Meus dados</button><button type="button" data-s="veiculos">Veículos</button><button type="button" data-s="indicacao">Indicação</button></div>
+      <article class="card" data-pane="perfil" data-sub="dados" style="margin-bottom:14px"><div class="eyebrow">Meus dados</div><form id="profileForm"><div class="field"><label for="pfFullName">Nome completo</label><input id="pfFullName" required></div><div class="field"><label for="pfEmail">E-mail</label><input id="pfEmail" disabled></div><div class="field"><label for="pfPhone">WhatsApp</label><input id="pfPhone" type="tel" inputmode="tel" placeholder="(53) 99999-9999"></div><button type="submit">Salvar dados</button></form><div id="pfStatus" class="status hidden"></div></article>
+      <div class="auth" data-pane="perfil"><article class="card" data-sub="veiculos"><h2>Meu veículo</h2><form id="vehicleForm"><div class="field"><label for="vehicleName">Marca e modelo</label><input id="vehicleName" required placeholder="Ex.: VW Nivus" /></div><div class="field"><label for="vehiclePlate">Placa</label><input id="vehiclePlate" required maxlength="8" placeholder="ABC1D23" autocapitalize="characters" /></div><div class="field"><label for="vehicleColor">Cor</label><input id="vehicleColor" placeholder="Cor do veículo" /></div><button type="submit">Salvar veículo</button></form><div id="vehicleStatus" class="status">Seus veículos aparecerão aqui.</div><div id="vehicleList"></div></article><article class="card" data-sub="dados"><h2>Mensalidades</h2><div id="paymentsList"></div><div id="paymentsStatus" class="status">Nenhum pagamento disponível.</div></article></div>
       <article class="card" data-pane="servicos"><div class="eyebrow">Agenda</div><h2>Serviços programados</h2><div id="nextList"></div><div id="nextStatus" class="status">Carregando...</div></article>
       <article class="card" data-pane="servicos" style="margin-top:14px"><div class="eyebrow">Histórico</div><h2>Serviços realizados</h2><div id="historyList"></div><div id="historyStatus" class="status">Carregando...</div></article>
-      <article class="card" data-pane="servicos" style="margin-top:14px"><div class="eyebrow">Recompensas</div><h2>Troque seus pontos</h2><div id="rewardList"></div><div id="rewardStatus" class="status hidden"></div></article>
-      <article class="card" data-pane="servicos" style="margin-top:14px"><div class="eyebrow">Mais pontos</div><h2>Comprar pontos</h2><p class="small">Ganhe pontos também pagando a mensalidade e indicando amigos.</p><div id="pkgList" class="row"></div><div id="pkgStatus" class="status hidden"></div></article>
+      <article class="card" data-pane="loja"><div class="eyebrow">Loja</div><h2>Troque seus pontos</h2><p class="small">Seu saldo: <b id="shopBal">0 pts</b>. Todos os serviços são realizados <b>mediante avaliação</b> do veículo.</p><div id="rewardList"></div><div id="rewardStatus" class="status hidden"></div></article>
+      <article class="card" data-pane="loja" style="margin-top:14px"><div class="eyebrow">Mais pontos</div><h2>Comprar pontos</h2><p class="small">Ganhe pontos também pagando a mensalidade e indicando amigos.</p><div id="pkgList" class="row"></div><div id="pkgStatus" class="status hidden"></div></article>
       <div class="banner" data-pane="servicos"><strong>Seu carro sempre como novo!</strong><span>Cuide de cada detalhe com a Linhagem.</span></div>
-      <article class="card" data-pane="perfil" style="margin-top:14px"><div class="eyebrow">Indique e ganhe</div><h2>Convide um amigo</h2><p id="refText">Quando um amigo assinar e pagar, você ganha uma recompensa.</p><div class="row"><span id="refCode" class="tag available">—</span><span id="refCount" class="small"></span></div><button id="refShare" type="button" style="margin-top:12px">Compartilhar convite</button><div id="refMsg" class="status hidden"></div></article>
+      <article class="card" data-pane="perfil" data-sub="indicacao" style="margin-top:14px"><div class="eyebrow">Indique e ganhe</div><h2>Convide um amigo</h2><p id="refText">Quando um amigo assinar e pagar, você ganha uma recompensa.</p><div class="row"><span id="refCode" class="tag available">—</span><span id="refCount" class="small"></span></div><button id="refShare" type="button" style="margin-top:12px">Compartilhar convite</button><div id="refMsg" class="status hidden"></div></article>
       <button id="logoutRow" class="secondary menurow" data-pane="perfil" type="button">Sair da conta</button>
     </section>
     <footer>LINHAGEM AUTOMOTIVA · Programa de fidelidade</footer>
@@ -248,7 +249,7 @@
     // ---------- Planos públicos (lidos do banco) ----------
     async function loadPlans() {
       if (!client) return;
-      const { data, error } = await client.from('plans').select('code,name,monthly_price_cents,points_per_payment,description').eq('active', true).order('monthly_price_cents');
+      const { data, error } = await client.from('plans').select('code,name,monthly_price_cents,points_per_payment,description,perks').eq('active', true).order('monthly_price_cents');
       if (error || !data || !data.length) return;
       const grid = $('plansGrid'); clear(grid);
       data.forEach((p, i) => {
@@ -258,7 +259,7 @@
         const sb = el('button', mine ? 'secondary' : null, mine ? (curSub.plans?.name === p.name ? 'Seu plano atual' : 'Trocar para ' + p.name) : 'Assinar ' + p.name);
         if (mine && curSub.plans?.name === p.name) sb.disabled = true; sb.type = 'button'; sb.addEventListener('click', () => subscribe(p.code, p.name));
         const hd = el('div', 'plan-hd'); const cr = el('span', 'crown'); cr.innerHTML = "<svg viewBox='0 0 24 24' aria-hidden='true'><path d='M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z'/></svg>"; hd.append(cr, el('h3', null, p.name));
-        card.append(hd, price, el('div', 'ptsbig', '★ ' + (p.points_per_payment || 0).toLocaleString('pt-BR') + ' pontos por mês'), el('p', null, p.description), sb);
+        card.append(hd, price, el('div', 'ptsbig', '★ ' + (p.points_per_payment || 0).toLocaleString('pt-BR') + ' pontos por mês'), el('p', null, p.description), ...(p.perks ? [el('div', 'perk', p.perks)] : []), sb);
         grid.appendChild(card);
       });
     }
@@ -344,14 +345,15 @@
     const REASON = { payment: 'Mensalidade paga', referral: 'Indicação de amigo', purchase: 'Compra de pontos', reward: 'Troca de prêmio', manual: 'Ajuste da oficina' };
     async function loadPoints() {
       const { data: pt } = await client.rpc('my_points'); const p = pt && pt[0], bal = p ? p.out_balance : 0;
-      $('ptsBalance').textContent = bal.toLocaleString('pt-BR') + ' pts'; const h = $('ptsHist'); clear(h);
+      $('ptsBalance').textContent = bal.toLocaleString('pt-BR') + ' pts'; $('shopBal').textContent = bal.toLocaleString('pt-BR') + ' pts'; const h = $('ptsHist'); clear(h);
       $('benefitCount').textContent = (p ? p.out_expiring || 0 : 0).toLocaleString('pt-BR') + ' pts';
       if (p && p.out_expiring_at) { const dd = new Date(p.out_expiring_at).toLocaleDateString('pt-BR'); $('expNote').textContent = 'Próximo vencimento: ' + dd; if (p.out_expiring > 0) h.appendChild(el('div', 'small ptsexp', 'Atenção: ' + p.out_expiring.toLocaleString('pt-BR') + ' pts vencem até ' + dd + '. Use antes!')); }
       ((p && p.out_history) || []).slice(0, 3).forEach(x => h.appendChild(el('div', 'small', (x.delta > 0 ? '+' : '') + x.delta + ' pts · ' + (REASON[x.reason] || x.reason) + ' · ' + new Date(x.at).toLocaleDateString('pt-BR'))));
-      const { data: rw } = await client.from('rewards').select('id,name,description,cost_points').eq('active', true).order('cost_points'); const rl = $('rewardList'); clear(rl);
+      const { data: rw } = await client.from('rewards').select('id,name,description,cost_points,image').eq('active', true).order('cost_points'); const rl = $('rewardList'); clear(rl);
       (rw || []).forEach(r => {
         const IMG = /cristaliza/i.test(r.name) ? 'cristalizacao' : /far[oó]is|farol|revitaliza/i.test(r.name) ? 'farois' : /lavagem/i.test(r.name) ? 'lavagem' : /polimento.*(completo|t[eé]cnico)/i.test(r.name) ? 'polimento-completo' : /polimento/i.test(r.name) ? 'polimento' : /retoque|arranh/i.test(r.name) ? 'retoque' : null;
-        const it = el('div', IMG ? 'svc rw has-img' : 'svc rw'); if (IMG) { const im = el('img', 'rwimg'); im.alt = r.name; im.loading = 'lazy'; im.onerror = () => { im.remove(); it.classList.remove('has-img'); }; im.src = './premio-' + IMG + '.jpg'; it.appendChild(im); }
+        const it = el('div', 'svc rw has-img'); const src = r.image || (IMG ? './premio-' + IMG + '.jpg' : null);
+        if (src) { const im = el('img', 'rwimg'); im.alt = r.name; im.loading = 'lazy'; im.onerror = () => { im.replaceWith(el('div', 'rwimg ph')); }; im.src = src; it.appendChild(im); } else it.appendChild(el('div', 'rwimg ph'));
         it.append(el('strong', null, r.name), el('div', 'small', (r.description || '') + ' · ' + r.cost_points.toLocaleString('pt-BR') + ' pts'));
         const b = el('button', bal >= r.cost_points ? null : 'secondary', bal >= r.cost_points ? 'Trocar por ' + r.cost_points.toLocaleString('pt-BR') + ' pts' : 'Faltam ' + (r.cost_points - bal).toLocaleString('pt-BR') + ' pts'); b.type = 'button'; b.disabled = bal < r.cost_points;
         b.addEventListener('click', async () => {
@@ -464,8 +466,9 @@
 
     // ---------- Abas do app e perfil ----------
     function setTab(t) { document.body.dataset.tab = t; document.querySelectorAll('#appNav button').forEach(b => b.classList.toggle('on', b.dataset.t === t)); window.scrollTo({ top: 0 }); }
-    document.body.dataset.tab = 'inicio';
-    $('ptsGo').addEventListener('click', () => { setTab('servicos'); });
+    document.body.dataset.tab = 'inicio'; document.body.dataset.sub = 'dados';
+    document.querySelector('.seg').addEventListener('click', e => { const b = e.target.closest('button[data-s]'); if (!b) return; document.body.dataset.sub = b.dataset.s; document.querySelectorAll('.seg button').forEach(x => x.classList.toggle('on', x === b)); });
+    $('ptsGo').addEventListener('click', () => { setTab('loja'); });
     $('ctaPlans').addEventListener('click', () => setTab('planos')); $('logoutRow').addEventListener('click', () => $('signOutBtn').click());
     $('appNav').addEventListener('click', e => { const b = e.target.closest('button[data-t]'); if (b) setTab(b.dataset.t); });
     $('profileForm').addEventListener('submit', async ev => {

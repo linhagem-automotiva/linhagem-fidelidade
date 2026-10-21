@@ -195,7 +195,7 @@
           <div id="adminStatus" class="status">As alterações são salvas direto no banco.</div>
         </article>
         <article class="card" style="margin-top:16px"><div class="eyebrow">Pontos</div><h2>Prêmios para troca</h2><p class="small">Valores de exemplo: ajuste ao custo real de vocês.</p><div class="editrow"><div class="field"><label for="valDays">Validade dos pontos (dias)</label><input id="valDays" type="number" min="30" inputmode="numeric"></div><button id="valSave" type="button" class="secondary">Salvar validade</button></div><p class="small">A mudança vale para pontos creditados daqui para frente. Os pontos já creditados mantêm a validade com que foram dados.</p>
-          <div id="rewardAdmin"></div><div class="editrow"><div class="field"><label for="rwName">Novo prêmio</label><input id="rwName"></div><div class="field"><label for="rwCost">Custo (pts)</label><input id="rwCost" type="number" min="1" inputmode="numeric"></div><button id="rwAdd" type="button">Adicionar</button></div><div id="rwStatus" class="status hidden"></div></article>
+          <div id="rewardAdmin"></div><div class="editrow"><div class="field"><label for="rwName">Novo prêmio</label><input id="rwName"></div><div class="field"><label for="rwDesc">Descrição curta</label><input id="rwDesc"></div><div class="field"><label for="rwCost">Custo (pts)</label><input id="rwCost" type="number" min="1" inputmode="numeric"></div><div class="field"><label for="rwImg">Foto (opcional)</label><input id="rwImg" type="file" accept="image/*"></div><button id="rwAdd" type="button">Adicionar</button></div><div id="rwStatus" class="status hidden"></div></article>
         <article class="card" style="margin-top:16px"><div class="eyebrow">Acesso</div><h2>Equipe (administradores)</h2><p class="small">Quem está aqui acessa este painel. A pessoa precisa já ter criado conta no app.</p><div id="teamList"></div>
           <div class="field"><label for="teamEmail">E-mail para adicionar</label><input id="teamEmail" type="email" inputmode="email" placeholder="socio@email.com"></div><button id="teamAdd" type="button">Adicionar administrador</button><div id="teamStatus" class="status hidden"></div></article>
       </section>
@@ -422,19 +422,19 @@
     function checkInput(label, value) { const f = el('div', 'field'); f.appendChild(el('label', null, label)); const i = el('input'); i.type = 'checkbox'; i.checked = value; i.style.width = '28px'; i.style.height = '28px'; f.appendChild(i); return [f, i]; }
     async function loadSettings() {
       const [plans, bens] = await Promise.all([
-        client.from('plans').select('id,code,name,monthly_price_cents,grace_days,active,points_per_payment').order('monthly_price_cents'),
+        client.from('plans').select('id,code,name,monthly_price_cents,grace_days,active,points_per_payment,perks').order('monthly_price_cents'),
         client.from('benefits').select('id,name,unlock_days,cycle_days,active,plan_id,plans(name),benefit_costs(estimated_cost_cents)').order('plan_id').order('unlock_days')
       ]);
       const pe = $('planEditor'); clear(pe);
       (plans.data || []).forEach(p => {
         const row = el('div', 'editrow'); const [f1, price] = numInput('Mensalidade (R$) · ' + p.name, (p.monthly_price_cents / 100).toFixed(2), '0.01', '0.01');
-        const [f2, grace] = numInput('Tolerância de atraso (dias)', p.grace_days, '1', '0'); const [f3, act] = checkInput('Ativo', p.active); const [f2b, ppp] = numInput('Pontos por mensalidade', p.points_per_payment ?? 100, '1', '0');
+        const [f2, grace] = numInput('Tolerância de atraso (dias)', p.grace_days, '1', '0'); const [f3, act] = checkInput('Ativo', p.active); const [f2b, ppp] = numInput('Pontos por mensalidade', p.points_per_payment ?? 100, '1', '0'); const [f2c, perks] = textInput('Destaque do plano (opcional)', p.perks || '');
         const btn = el('button', 'secondary', 'Salvar'); btn.type = 'button';
         btn.addEventListener('click', async () => {
-          const { error } = await client.from('plans').update({ monthly_price_cents: Math.round(parseFloat(price.value) * 100), grace_days: parseInt(grace.value, 10), points_per_payment: parseInt(ppp.value, 10) || 0, active: act.checked }).eq('id', p.id);
+          const { error } = await client.from('plans').update({ monthly_price_cents: Math.round(parseFloat(price.value) * 100), grace_days: parseInt(grace.value, 10), points_per_payment: parseInt(ppp.value, 10) || 0, perks: perks.value.trim() || null, active: act.checked }).eq('id', p.id);
           status('adminStatus', error ? friendly(error) : 'Plano ' + p.name + ' salvo.', error ? 'error' : 'success'); if (!error) loadSettings();
         });
-        row.append(f1, f2, f2b, f3, btn); pe.appendChild(row);
+        row.append(f1, f2, f2b, f2c, f3, btn); pe.appendChild(row);
       });
       const np = $('nbPlan'); clear(np); (plans.data || []).forEach(p => { const o = el('option', null, p.name); o.value = p.id; np.appendChild(o); });
       const be = $('benefitEditor'); clear(be);
@@ -488,12 +488,26 @@
     $('valSave').addEventListener('click', async () => { const v = parseInt($('valDays').value, 10); if (!(v >= 30)) { rwMsg('Use pelo menos 30 dias.', 'error'); return; } const x = await client.from('app_settings').upsert({ key: 'points_validity_days', value: String(v) }); rwMsg(x.error ? friendly(x.error) : 'Validade salva: ' + v + ' dias para os próximos pontos.', x.error ? 'error' : 'success'); });
     async function loadRewards() {
       const cfg = await client.from('app_settings').select('value').eq('key', 'points_validity_days').maybeSingle(); $('valDays').value = (cfg.data && cfg.data.value) || 365;
-      const { data, error } = await client.from('rewards').select('id,name,cost_points,active').order('cost_points'); const b = $('rewardAdmin'); clear(b);
+      const { data, error } = await client.from('rewards').select('id,name,cost_points,active,image').order('cost_points'); const b = $('rewardAdmin'); clear(b);
       if (error) { rwMsg('Rode o SQL 008 para ativar os pontos.', 'error'); return; }
-      data.forEach(r => { const row = el('div', 'editrow'); const [f1, n] = textInput('Prêmio', r.name), [f2, c] = numInput('Custo (pts)', r.cost_points, '1', '1'), [f3, act] = checkInput('Ativo', r.active); const sv = el('button', 'secondary', 'Salvar'); sv.type = 'button';
-        sv.addEventListener('click', async () => { const x = await client.from('rewards').update({ name: n.value.trim(), cost_points: parseInt(c.value, 10), active: act.checked }).eq('id', r.id); rwMsg(x.error ? friendly(x.error) : 'Prêmio salvo.', x.error ? 'error' : 'success'); }); row.append(f1, f2, f3, sv); b.appendChild(row); });
+      data.forEach(r => { const row = el('div', 'editrow'); const [f1, n] = textInput('Prêmio', r.name), [f2, c] = numInput('Custo (pts)', r.cost_points, '1', '1'), [f3, act] = checkInput('Ativo', r.active); const ff = el('div', 'field'); ff.appendChild(el('label', null, r.image ? 'Trocar foto' : 'Foto')); const fi = el('input'); fi.type = 'file'; fi.accept = 'image/*'; ff.appendChild(fi); const sv = el('button', 'secondary', 'Salvar'); sv.type = 'button';
+        sv.addEventListener('click', async () => {
+          const upd = { name: n.value.trim(), cost_points: parseInt(c.value, 10), active: act.checked };
+          try { if (fi.files[0]) upd.image = await uploadRewardImage(r.id, fi.files[0]); } catch (e) { rwMsg('Erro na foto: ' + (e.message || e), 'error'); return; }
+          const x = await client.from('rewards').update(upd).eq('id', r.id); rwMsg(x.error ? friendly(x.error) : 'Prêmio salvo.', x.error ? 'error' : 'success'); });
+        row.append(f1, f2, f3, ff, sv); b.appendChild(row); });
     }
-    $('rwAdd').addEventListener('click', async () => { const n = $('rwName').value.trim(), c = parseInt($('rwCost').value, 10); if (!n || !(c > 0)) { rwMsg('Informe nome e custo.', 'error'); return; } const x = await client.from('rewards').insert({ name: n, cost_points: c }); rwMsg(x.error ? friendly(x.error) : 'Prêmio adicionado.', x.error ? 'error' : 'success'); if (!x.error) { $('rwName').value = ''; $('rwCost').value = ''; loadRewards(); } });
+    async function uploadRewardImage(id, file) {
+      const path = id + '-' + Date.now() + '.jpg'; const up = await client.storage.from('reward-images').upload(path, await shrink(file), { contentType: 'image/jpeg', upsert: true });
+      if (up.error) throw up.error; return client.storage.from('reward-images').getPublicUrl(path).data.publicUrl;
+    }
+    $('rwAdd').addEventListener('click', async () => {
+      const nm = $('rwName').value.trim(), c = parseInt($('rwCost').value, 10); if (!nm || !(c > 0)) { rwMsg('Informe nome e custo.', 'error'); return; }
+      const ins = await client.from('rewards').insert({ name: nm, description: $('rwDesc').value.trim() || null, cost_points: c }).select('id').single(); if (ins.error) { rwMsg(friendly(ins.error), 'error'); return; }
+      const f = $('rwImg').files[0]; let warn = '';
+      if (f) { try { const url = await uploadRewardImage(ins.data.id, f); await client.from('rewards').update({ image: url }).eq('id', ins.data.id); } catch (e) { warn = ' (a foto não subiu: ' + (e.message || e) + ')'; } }
+      rwMsg('Prêmio adicionado.' + warn, warn ? 'error' : 'success'); $('rwName').value = ''; $('rwDesc').value = ''; $('rwCost').value = ''; $('rwImg').value = ''; loadRewards();
+    });
 
     // ---------- Equipe ----------
     const TEAM_ERR = { USER_NOT_FOUND: 'Nenhuma conta com esse e-mail. A pessoa precisa criar conta no app antes.', CANNOT_REMOVE_SELF: 'Você não pode remover o seu próprio acesso.' };

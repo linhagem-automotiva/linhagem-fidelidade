@@ -168,3 +168,15 @@ button { scroll-margin-bottom:110px; }
 .step strong { font-size:1.02rem; } .step span { color:#9aa0b0; font-size:.88rem; line-height:1.4; }
 @media (min-width:760px) { .steps { grid-template-columns:repeat(3,1fr); } }
 .ptsbig { font-family:"Space Grotesk",sans-serif; font-size:1.25rem; font-weight:700; color:#e9c36a; margin:2px 0 8px; } .ptsexp { color:#ffc24d; margin-top:4px; }
+
+/* Loja, 5 abas, submenu do perfil, destaque do plano, prêmios sempre em colunas */
+.appnav { grid-template-columns:repeat(5,1fr); } .appnav button { font-size:.66rem; }
+body.logged[data-tab="loja"] [data-pane]:not([data-pane="loja"]) { display:none; }
+body.logged[data-sub="dados"] [data-sub]:not([data-sub="dados"]),
+body.logged[data-sub="veiculos"] [data-sub]:not([data-sub="veiculos"]),
+body.logged[data-sub="indicacao"] [data-sub]:not([data-sub="indicacao"]) { display:none; }
+.seg { display:flex; gap:6px; margin:0 0 12px; padding:4px; border:1px solid #1c1e26; border-radius:14px; background:#0c0d11; }
+.seg button { flex:1; background:transparent; box-shadow:none; color:#9aa0b0; padding:10px 6px; min-height:40px; font-size:.82rem; border-radius:10px; } .seg button.on { background:linear-gradient(135deg,#dc1a12,#a30c0c); color:#fff; }
+.perk { margin:4px 0 12px; padding:10px 12px; border:1px solid #ffc24d55; border-radius:12px; background:#ffc24d12; color:#ffd98a; font-size:.86rem; }
+.svc.rw .rwimg.ph { background:radial-gradient(120px 60px at 50% 40%,#e10b0b44,transparent 70%),linear-gradient(135deg,#14151b,#0c0d11); border-bottom:1px solid #1c1e26; }
+#rewardList .svc.rw:not(.has-img) { grid-column:auto; }

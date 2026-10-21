@@ -194,7 +194,7 @@
           <button id="nbBtn" type="button">Adicionar benefício</button></details>
           <div id="adminStatus" class="status">As alterações são salvas direto no banco.</div>
         </article>
-        <article class="card" style="margin-top:16px"><div class="eyebrow">Pontos</div><h2>Prêmios para troca</h2><p class="small">Valores de exemplo: ajuste ao custo real de vocês.</p><div class="editrow"><div class="field"><label for="valDays">Validade dos pontos (dias)</label><input id="valDays" type="number" min="30" inputmode="numeric"></div><button id="valSave" type="button" class="secondary">Salvar validade</button></div><p class="small">A mudança vale para pontos creditados daqui para frente. Os pontos já creditados mantêm a validade com que foram dados.</p>
+        <article class="card" style="margin-top:16px"><div class="eyebrow">Pontos</div><h2>Prêmios para troca</h2><p class="small">Para serviços que variam por porte do carro, preencha os preços (pequeno, sedan, grande) e o extra para carro preto: o app calcula os pontos (preço × 4) para o veículo do cliente. Deixe em branco para um valor fixo em pontos.</p><div class="editrow"><div class="field"><label for="valDays">Validade dos pontos (dias)</label><input id="valDays" type="number" min="30" inputmode="numeric"></div><button id="valSave" type="button" class="secondary">Salvar validade</button></div><p class="small">A mudança vale para pontos creditados daqui para frente. Os pontos já creditados mantêm a validade com que foram dados.</p>
           <div id="rewardAdmin"></div><div class="editrow"><div class="field"><label for="rwName">Novo prêmio</label><input id="rwName"></div><div class="field"><label for="rwDesc">Descrição curta</label><input id="rwDesc"></div><div class="field"><label for="rwCost">Custo (pts)</label><input id="rwCost" type="number" min="1" inputmode="numeric"></div><div class="field"><label for="rwImg">Foto (opcional)</label><input id="rwImg" type="file" accept="image/*"></div><button id="rwAdd" type="button">Adicionar</button></div><div id="rwStatus" class="status hidden"></div></article>
         <article class="card" style="margin-top:16px"><div class="eyebrow">Acesso</div><h2>Equipe (administradores)</h2><p class="small">Quem está aqui acessa este painel. A pessoa precisa já ter criado conta no app.</p><div id="teamList"></div>
           <div class="field"><label for="teamEmail">E-mail para adicionar</label><input id="teamEmail" type="email" inputmode="email" placeholder="socio@email.com"></div><button id="teamAdd" type="button">Adicionar administrador</button><div id="teamStatus" class="status hidden"></div></article>
@@ -283,7 +283,7 @@
       let { data, error } = await client.rpc('redeem_code', { p_code: code });
       if (error && (error.message || '').includes('CODE_INVALID_OR_EXPIRED')) {
         const rw = await client.rpc('redeem_reward_code', { p_code: code });
-        if (!rw.error) { $('redeemBtn').disabled = false; $('redeemCode').value = ''; const x = rw.data[0], bx = $('redeemStatus'); bx.className = 'result'; clear(bx); bx.append(el('strong', null, '✓ Prêmio entregue'), el('div', null, x.out_reward), el('div', 'small', (x.out_customer || 'Cliente') + ' · -' + x.out_cost + ' pts · saldo ' + x.out_balance + ' pts')); return; }
+        if (!rw.error) { $('redeemBtn').disabled = false; $('redeemCode').value = ''; const x = rw.data[0], bx = $('redeemStatus'); bx.className = 'result'; clear(bx); bx.append(el('strong', null, '✓ Prêmio entregue'), el('div', null, x.out_reward), el('div', 'small', (x.out_customer || 'Cliente') + ' · -' + x.out_cost + ' pts · saldo ' + x.out_balance + ' pts' + (x.out_vehicle ? ' · ' + x.out_vehicle : ''))); return; }
         if (!(rw.error.message || '').includes('CODE_INVALID_OR_EXPIRED')) error = rw.error;
       }
       $('redeemBtn').disabled = false;
@@ -336,7 +336,7 @@
     async function loadClients() {
       status('cliStatus', 'Carregando...');
       const { data, error } = await client.from('subscriptions')
-        .select('id,customer_id,vehicle_id,status,started_at,created_at,profiles(full_name,phone),plans(name),vehicles(make_model,plate)')
+        .select('id,customer_id,vehicle_id,status,started_at,created_at,profiles(full_name,phone),plans(name),vehicles(make_model,plate,year,size_class,color)')
         .order('created_at', { ascending: false }).limit(500);
       if (error) { status('cliStatus', 'Não foi possível carregar: ' + error.message, 'error'); return; }
       const seen = new Set(); clientsCache = [];
@@ -488,14 +488,14 @@
     $('valSave').addEventListener('click', async () => { const v = parseInt($('valDays').value, 10); if (!(v >= 30)) { rwMsg('Use pelo menos 30 dias.', 'error'); return; } const x = await client.from('app_settings').upsert({ key: 'points_validity_days', value: String(v) }); rwMsg(x.error ? friendly(x.error) : 'Validade salva: ' + v + ' dias para os próximos pontos.', x.error ? 'error' : 'success'); });
     async function loadRewards() {
       const cfg = await client.from('app_settings').select('value').eq('key', 'points_validity_days').maybeSingle(); $('valDays').value = (cfg.data && cfg.data.value) || 365;
-      const { data, error } = await client.from('rewards').select('id,name,cost_points,active,image').order('cost_points'); const b = $('rewardAdmin'); clear(b);
+      const { data, error } = await client.from('rewards').select('id,name,cost_points,active,image,price_small_cents,price_medium_cents,price_large_cents,black_extra_cents').order('cost_points'); const b = $('rewardAdmin'); clear(b);
       if (error) { rwMsg('Rode o SQL 008 para ativar os pontos.', 'error'); return; }
-      data.forEach(r => { const row = el('div', 'editrow'); const [f1, n] = textInput('Prêmio', r.name), [f2, c] = numInput('Custo (pts)', r.cost_points, '1', '1'), [f3, act] = checkInput('Ativo', r.active); const ff = el('div', 'field'); ff.appendChild(el('label', null, r.image ? 'Trocar foto' : 'Foto')); const fi = el('input'); fi.type = 'file'; fi.accept = 'image/*'; ff.appendChild(fi); const sv = el('button', 'secondary', 'Salvar'); sv.type = 'button';
+      data.forEach(r => { const row = el('div', 'editrow'); const [f1, n] = textInput('Prêmio', r.name), [f2, c] = numInput('Custo (pts)', r.cost_points, '1', '1'), [f3, act] = checkInput('Ativo', r.active); const cents = x => x == null ? '' : (x / 100).toFixed(2); const [g1, ps] = numInput('Preço pequeno (R$)', cents(r.price_small_cents), '0.01'), [g2, pm] = numInput('Preço sedan (R$)', cents(r.price_medium_cents), '0.01'), [g3, pl] = numInput('Preço grande (R$)', cents(r.price_large_cents), '0.01'), [g4, pb] = numInput('Extra se preto (R$)', cents(r.black_extra_cents), '0.01'); const ff = el('div', 'field'); ff.appendChild(el('label', null, r.image ? 'Trocar foto' : 'Foto')); const fi = el('input'); fi.type = 'file'; fi.accept = 'image/*'; ff.appendChild(fi); const sv = el('button', 'secondary', 'Salvar'); sv.type = 'button';
         sv.addEventListener('click', async () => {
-          const upd = { name: n.value.trim(), cost_points: parseInt(c.value, 10), active: act.checked };
+          const mc = i => i.value === '' ? null : Math.round(parseFloat(i.value) * 100); const upd = { name: n.value.trim(), cost_points: parseInt(c.value, 10), active: act.checked, price_small_cents: mc(ps), price_medium_cents: mc(pm), price_large_cents: mc(pl), black_extra_cents: mc(pb) };
           try { if (fi.files[0]) upd.image = await uploadRewardImage(r.id, fi.files[0]); } catch (e) { rwMsg('Erro na foto: ' + (e.message || e), 'error'); return; }
           const x = await client.from('rewards').update(upd).eq('id', r.id); rwMsg(x.error ? friendly(x.error) : 'Prêmio salvo.', x.error ? 'error' : 'success'); });
-        row.append(f1, f2, f3, ff, sv); b.appendChild(row); });
+        row.append(f1, f2, f3, g1, g2, g3, g4, ff, sv); b.appendChild(row); });
     }
     async function uploadRewardImage(id, file) {
       const path = id + '-' + Date.now() + '.jpg'; const up = await client.storage.from('reward-images').upload(path, await shrink(file), { contentType: 'image/jpeg', upsert: true });

@@ -332,7 +332,7 @@
     $('reloadRed').addEventListener('click', loadRecent);
 
     // ---------- Clientes ----------
-    let clientsCache = [];
+    let clientsCache = [], vehMap = {}; const SIZE_PT = { pequeno: 'Pequeno', medio: 'Sedan/médio', grande: 'Grande' }, COLORS = ['Preto', 'Branco', 'Prata', 'Cinza', 'Vermelho', 'Azul', 'Verde', 'Amarelo', 'Marrom', 'Outra'];
     async function loadClients() {
       status('cliStatus', 'Carregando...');
       const { data, error } = await client.from('subscriptions')
@@ -341,6 +341,7 @@
       if (error) { status('cliStatus', 'Não foi possível carregar: ' + error.message, 'error'); return; }
       const seen = new Set(); clientsCache = [];
       data.forEach(s => { if (!seen.has(s.customer_id)) { seen.add(s.customer_id); clientsCache.push(s); } });
+      vehMap = {}; if (clientsCache.length) { const vr = await client.from('vehicles').select('id,customer_id,make_model,plate,year,color,size_class').in('customer_id', clientsCache.map(s => s.customer_id)); (vr.data || []).forEach(v => { (vehMap[v.customer_id] = vehMap[v.customer_id] || []).push(v); }); }
       renderClients();
     }
     function renderClients() {
@@ -359,12 +360,30 @@
         const days = s.started_at ? Math.floor((Date.now() - new Date(s.started_at).getTime()) / 86400000) : null;
         it.append(top, el('div', 'small', (s.plans?.name || 'Sem plano') + (days != null ? ' · ' + days + ' dias de fidelidade' : '') + (s.vehicles ? ' · ' + s.vehicles.make_model + ' ' + s.vehicles.plate : ' · sem veículo vinculado')));
         if (s.profiles?.phone) { const p = el('div', 'small'); const a = el('a', null, s.profiles.phone); a.href = 'tel:' + s.profiles.phone.replace(/[^0-9+]/g, ''); p.append('Telefone: ', a); it.appendChild(p); }
+        (vehMap[s.customer_id] || []).forEach(v => {
+          const vr = el('div', 'small'); vr.style.marginTop = '6px'; vr.append((v.make_model || 'Veículo') + (v.year ? ' ' + v.year : '') + ' · ' + v.plate + ' · ' + (SIZE_PT[v.size_class] || 'porte não informado') + ' · ' + (v.color || 'cor não informada') + ' ');
+          const eb = el('button', 'secondary', 'Editar veículo'); eb.type = 'button'; eb.style.cssText = 'padding:6px 12px;min-height:34px'; eb.addEventListener('click', () => vehicleEdit(v, vr, eb)); vr.appendChild(eb); it.appendChild(vr);
+        });
         const acts = el('div', 'row'); acts.style.marginTop = '8px';
         const gp = el('button', 'secondary', 'Dar pontos'); gp.type = 'button'; gp.addEventListener('click', async () => { const v = parseInt(prompt('Quantos pontos dar a ' + (s.profiles?.full_name || 'este cliente') + '? (negativo para descontar)'), 10); if (!v) return; const x = await client.rpc('admin_grant_points', { p_customer: s.customer_id, p_points: v, p_reason: 'manual' }); gp.textContent = x.error ? 'Erro: ' + x.error.message : '✓ ' + v + ' pts lançados'; }); acts.appendChild(gp);
         const ob = el('button', 'secondary', 'Registrar serviço'); ob.type = 'button'; ob.addEventListener('click', () => serviceForm(s, it, ob)); acts.appendChild(ob);
         if (s.profiles?.phone) { let d = s.profiles.phone.replace(/\D/g, ''); if (d.length <= 11) d = '55' + d; const w = el('a', null, 'WhatsApp'); w.href = 'https://wa.me/' + d; w.target = '_blank'; w.rel = 'noopener'; w.style.padding = '12px 6px'; acts.appendChild(w); }
         it.appendChild(acts); list.appendChild(it);
       });
+    }
+    function vehicleEdit(v, host, btn) {
+      btn.classList.add('hidden'); const f = el('div', 'result'); f.style.cssText = 'border-color:var(--line);background:var(--surface2);margin-top:8px';
+      const [f1, mod] = textInput('Modelo', v.make_model || ''), [f2, yr] = numInput('Ano', v.year || '', '1', '1950');
+      const f3 = el('div', 'field'); f3.appendChild(el('label', null, 'Porte')); const sz = el('select'); [['', 'Não informado'], ['pequeno', 'Pequeno'], ['medio', 'Sedan / médio'], ['grande', 'Grande']].forEach(([val, lb]) => { const o = el('option', null, lb); o.value = val; sz.appendChild(o); }); sz.value = v.size_class || ''; f3.appendChild(sz);
+      const f4 = el('div', 'field'); f4.appendChild(el('label', null, 'Cor')); const cl = el('select'); ['', ...COLORS].forEach(c => { const o = el('option', null, c || 'Não informada'); o.value = c.toUpperCase(); cl.appendChild(o); }); cl.value = (v.color || '').toUpperCase(); f4.appendChild(cl);
+      const go = el('button', null, 'Salvar veículo'); go.type = 'button'; const cx = el('button', 'secondary', 'Cancelar'); cx.type = 'button'; cx.style.marginLeft = '8px'; const st = el('div', 'status hidden');
+      cx.addEventListener('click', () => { f.remove(); btn.classList.remove('hidden'); });
+      go.addEventListener('click', async () => {
+        const { error } = await client.rpc('admin_update_vehicle', { p_vehicle: v.id, p_model: mod.value, p_year: parseInt(yr.value, 10) || null, p_size: sz.value || null, p_color: cl.value || null });
+        if (error) { st.className = 'status error'; st.textContent = friendly(error); return; }
+        v.make_model = mod.value.trim() || v.make_model; v.year = parseInt(yr.value, 10) || null; v.size_class = sz.value || null; v.color = cl.value || null; renderClients();
+      });
+      f.append(f1, f2, f3, f4, go, cx, st); host.appendChild(f);
     }
     function shrink(file) { return new Promise((ok, no) => { const im = new Image(), u = URL.createObjectURL(file); im.onload = () => { const k = Math.min(1, 1280 / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(u); c.toBlob(b => b ? ok(b) : no(new Error('Imagem inválida')), 'image/jpeg', 0.75); }; im.onerror = () => no(new Error('Não foi possível ler a foto')); im.src = u; }); }
     function serviceForm(s, host, btn) {

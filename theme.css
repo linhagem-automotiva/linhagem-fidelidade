@@ -180,3 +180,6 @@ body.logged[data-sub="indicacao"] [data-sub]:not([data-sub="indicacao"]) { displ
 .perk { margin:4px 0 12px; padding:10px 12px; border:1px solid #ffc24d55; border-radius:12px; background:#ffc24d12; color:#ffd98a; font-size:.86rem; }
 .svc.rw .rwimg.ph { background:radial-gradient(120px 60px at 50% 40%,#e10b0b44,transparent 70%),linear-gradient(135deg,#14151b,#0c0d11); border-bottom:1px solid #1c1e26; }
 #rewardList .svc.rw:not(.has-img) { grid-column:auto; }
+
+.blackcard { border-color:#ffc24d55; background:linear-gradient(135deg,#2a2008,#0c0d11 70%); margin-top:12px; } .blackcard .row { gap:10px; margin-top:10px; }
+.btnlink { flex:1; text-align:center; padding:13px 14px; border-radius:14px; font-weight:700; color:#fff !important; text-decoration:none; background:linear-gradient(135deg,#dc1a12,#a30c0c); } .btnlink.secondary { background:#ffffff0d; border:1px solid #ffffff22; }

@@ -194,7 +194,8 @@
           <button id="nbBtn" type="button">Adicionar benefício</button></details>
           <div id="adminStatus" class="status">As alterações são salvas direto no banco.</div>
         </article>
-        <article class="card" style="margin-top:16px"><div class="eyebrow">Pontos</div><h2>Prêmios para troca</h2><p class="small">Para serviços que variam por porte do carro, preencha os preços (pequeno, sedan, grande) e o extra para carro preto: o app calcula os pontos (preço × 4) para o veículo do cliente. Deixe em branco para um valor fixo em pontos.</p><div class="editrow"><div class="field"><label for="valDays">Validade dos pontos (dias)</label><input id="valDays" type="number" min="30" inputmode="numeric"></div><button id="valSave" type="button" class="secondary">Salvar validade</button></div><p class="small">A mudança vale para pontos creditados daqui para frente. Os pontos já creditados mantêm a validade com que foram dados.</p>
+        <article class="card" style="margin-top:16px"><div class="eyebrow">Pontos</div><h2>Prêmios para troca</h2><p class="small">Para serviços que variam por porte do carro, preencha os preços (pequeno, sedan, grande) o extra para carro preto e o preço para moto: o app calcula os pontos (preço × 4) para o veículo do cliente. Deixe em branco para um valor fixo em pontos.</p><div class="editrow"><div class="field"><label for="ptsPerReal">Pontos por R$ 1 de serviço</label><input id="ptsPerReal" type="number" min="0.1" step="0.1" inputmode="decimal"></div><div class="field"><label for="ccLim1">Moto, faixa 1 até (cc)</label><input id="ccLim1" type="number" min="50" inputmode="numeric"></div><div class="field"><label for="ccLim2">Faixa 2 até (cc)</label><input id="ccLim2" type="number" min="50" inputmode="numeric"></div><div class="field"><label for="ccLim3">Faixa 3 até (cc)</label><input id="ccLim3" type="number" min="50" inputmode="numeric"></div><button id="ruleSave" type="button" class="secondary">Salvar regras de pontos</button></div><p class="small">Pontos = preço do serviço (R$) × este número. Vale para os serviços com preço por veículo; os de valor fixo em pontos não mudam. Acima da faixa 3 é a faixa 4. Motos em faixa sem preço aparecem como indisponíveis.</p>
+          <div class="editrow"><div class="field"><label for="valDays">Validade dos pontos (dias)</label><input id="valDays" type="number" min="30" inputmode="numeric"></div><button id="valSave" type="button" class="secondary">Salvar validade</button></div><p class="small">A mudança vale para pontos creditados daqui para frente. Os pontos já creditados mantêm a validade com que foram dados.</p>
           <div id="rewardAdmin"></div><div class="editrow"><div class="field"><label for="rwName">Novo prêmio</label><input id="rwName"></div><div class="field"><label for="rwDesc">Descrição curta</label><input id="rwDesc"></div><div class="field"><label for="rwCost">Custo (pts)</label><input id="rwCost" type="number" min="1" inputmode="numeric"></div><div class="field"><label for="rwImg">Foto (opcional)</label><input id="rwImg" type="file" accept="image/*"></div><button id="rwAdd" type="button">Adicionar</button></div><div id="rwStatus" class="status hidden"></div></article>
         <article class="card" style="margin-top:16px"><div class="eyebrow">Acesso</div><h2>Equipe (administradores)</h2><p class="small">Quem está aqui acessa este painel. A pessoa precisa já ter criado conta no app.</p><div id="teamList"></div>
           <div class="field"><label for="teamEmail">E-mail para adicionar</label><input id="teamEmail" type="email" inputmode="email" placeholder="socio@email.com"></div><button id="teamAdd" type="button">Adicionar administrador</button><div id="teamStatus" class="status hidden"></div></article>
@@ -332,7 +333,7 @@
     $('reloadRed').addEventListener('click', loadRecent);
 
     // ---------- Clientes ----------
-    let clientsCache = [], vehMap = {}; const SIZE_PT = { pequeno: 'Pequeno', medio: 'Sedan/médio', grande: 'Grande' }, COLORS = ['Preto', 'Branco', 'Prata', 'Cinza', 'Vermelho', 'Azul', 'Verde', 'Amarelo', 'Marrom', 'Outra'];
+    let clientsCache = [], vehMap = {}; const SIZE_PT = { pequeno: 'Pequeno', medio: 'Sedan/médio', grande: 'Grande', moto: 'Moto' }, COLORS = ['Preto', 'Branco', 'Prata', 'Cinza', 'Vermelho', 'Azul', 'Verde', 'Amarelo', 'Marrom', 'Outra'];
     async function loadClients() {
       status('cliStatus', 'Carregando...');
       const { data, error } = await client.from('subscriptions')
@@ -341,7 +342,7 @@
       if (error) { status('cliStatus', 'Não foi possível carregar: ' + error.message, 'error'); return; }
       const seen = new Set(); clientsCache = [];
       data.forEach(s => { if (!seen.has(s.customer_id)) { seen.add(s.customer_id); clientsCache.push(s); } });
-      vehMap = {}; if (clientsCache.length) { const vr = await client.from('vehicles').select('id,customer_id,make_model,plate,year,color,size_class').in('customer_id', clientsCache.map(s => s.customer_id)); (vr.data || []).forEach(v => { (vehMap[v.customer_id] = vehMap[v.customer_id] || []).push(v); }); }
+      vehMap = {}; if (clientsCache.length) { const vr = await client.from('vehicles').select('id,customer_id,make_model,plate,year,color,size_class,cc').in('customer_id', clientsCache.map(s => s.customer_id)); (vr.data || []).forEach(v => { (vehMap[v.customer_id] = vehMap[v.customer_id] || []).push(v); }); }
       renderClients();
     }
     function renderClients() {
@@ -361,7 +362,7 @@
         it.append(top, el('div', 'small', (s.plans?.name || 'Sem plano') + (days != null ? ' · ' + days + ' dias de fidelidade' : '') + (s.vehicles ? ' · ' + s.vehicles.make_model + ' ' + s.vehicles.plate : ' · sem veículo vinculado')));
         if (s.profiles?.phone) { const p = el('div', 'small'); const a = el('a', null, s.profiles.phone); a.href = 'tel:' + s.profiles.phone.replace(/[^0-9+]/g, ''); p.append('Telefone: ', a); it.appendChild(p); }
         (vehMap[s.customer_id] || []).forEach(v => {
-          const vr = el('div', 'small'); vr.style.marginTop = '6px'; vr.append((v.make_model || 'Veículo') + (v.year ? ' ' + v.year : '') + ' · ' + v.plate + ' · ' + (SIZE_PT[v.size_class] || 'porte não informado') + ' · ' + (v.color || 'cor não informada') + ' ');
+          const vr = el('div', 'small'); vr.style.marginTop = '6px'; vr.append((v.make_model || 'Veículo') + (v.year ? ' ' + v.year : '') + (v.cc ? ' · ' + v.cc + ' cc' : '') + ' · ' + v.plate + ' · ' + (SIZE_PT[v.size_class] || 'porte não informado') + ' · ' + (v.color || 'cor não informada') + ' ');
           const eb = el('button', 'secondary', 'Editar veículo'); eb.type = 'button'; eb.style.cssText = 'padding:6px 12px;min-height:34px'; eb.addEventListener('click', () => vehicleEdit(v, vr, eb)); vr.appendChild(eb); it.appendChild(vr);
         });
         const acts = el('div', 'row'); acts.style.marginTop = '8px';
@@ -374,16 +375,16 @@
     function vehicleEdit(v, host, btn) {
       btn.classList.add('hidden'); const f = el('div', 'result'); f.style.cssText = 'border-color:var(--line);background:var(--surface2);margin-top:8px';
       const [f1, mod] = textInput('Modelo', v.make_model || ''), [f2, yr] = numInput('Ano', v.year || '', '1', '1950');
-      const f3 = el('div', 'field'); f3.appendChild(el('label', null, 'Porte')); const sz = el('select'); [['', 'Não informado'], ['pequeno', 'Pequeno'], ['medio', 'Sedan / médio'], ['grande', 'Grande']].forEach(([val, lb]) => { const o = el('option', null, lb); o.value = val; sz.appendChild(o); }); sz.value = v.size_class || ''; f3.appendChild(sz);
+      const f3 = el('div', 'field'); f3.appendChild(el('label', null, 'Porte')); const sz = el('select'); [['', 'Não informado'], ['pequeno', 'Pequeno'], ['medio', 'Sedan / médio'], ['grande', 'Grande'], ['moto', 'Moto']].forEach(([val, lb]) => { const o = el('option', null, lb); o.value = val; sz.appendChild(o); }); sz.value = v.size_class || ''; f3.appendChild(sz); const [f3b, cc] = numInput('Cilindradas (cc, só moto)', v.cc || '', '1', '50');
       const f4 = el('div', 'field'); f4.appendChild(el('label', null, 'Cor')); const cl = el('select'); ['', ...COLORS].forEach(c => { const o = el('option', null, c || 'Não informada'); o.value = c.toUpperCase(); cl.appendChild(o); }); cl.value = (v.color || '').toUpperCase(); f4.appendChild(cl);
       const go = el('button', null, 'Salvar veículo'); go.type = 'button'; const cx = el('button', 'secondary', 'Cancelar'); cx.type = 'button'; cx.style.marginLeft = '8px'; const st = el('div', 'status hidden');
       cx.addEventListener('click', () => { f.remove(); btn.classList.remove('hidden'); });
       go.addEventListener('click', async () => {
-        const { error } = await client.rpc('admin_update_vehicle', { p_vehicle: v.id, p_model: mod.value, p_year: parseInt(yr.value, 10) || null, p_size: sz.value || null, p_color: cl.value || null });
+        const { error } = await client.rpc('admin_update_vehicle', { p_vehicle: v.id, p_model: mod.value, p_year: parseInt(yr.value, 10) || null, p_size: sz.value || null, p_color: cl.value || null, p_cc: sz.value === 'moto' ? (parseInt(cc.value, 10) || null) : null });
         if (error) { st.className = 'status error'; st.textContent = friendly(error); return; }
-        v.make_model = mod.value.trim() || v.make_model; v.year = parseInt(yr.value, 10) || null; v.size_class = sz.value || null; v.color = cl.value || null; renderClients();
+        v.make_model = mod.value.trim() || v.make_model; v.year = parseInt(yr.value, 10) || null; v.size_class = sz.value || null; v.cc = sz.value === 'moto' ? (parseInt(cc.value, 10) || null) : null; v.color = cl.value || null; renderClients();
       });
-      f.append(f1, f2, f3, f4, go, cx, st); host.appendChild(f);
+      f.append(f1, f2, f3, f3b, f4, go, cx, st); host.appendChild(f);
     }
     function shrink(file) { return new Promise((ok, no) => { const im = new Image(), u = URL.createObjectURL(file); im.onload = () => { const k = Math.min(1, 1280 / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(u); c.toBlob(b => b ? ok(b) : no(new Error('Imagem inválida')), 'image/jpeg', 0.75); }; im.onerror = () => no(new Error('Não foi possível ler a foto')); im.src = u; }); }
     function serviceForm(s, host, btn) {
@@ -504,17 +505,25 @@
 
     // ---------- Prêmios ----------
     const rwMsg = (m, t) => { $('rwStatus').classList.remove('hidden'); status('rwStatus', m, t); };
+    $('ruleSave').addEventListener('click', async () => {
+      const k = parseFloat($('ptsPerReal').value), l = [1, 2, 3].map(i => parseInt($('ccLim' + i).value, 10));
+      if (!(k > 0) || l.some(x => !(x >= 50)) || !(l[0] < l[1] && l[1] < l[2])) { rwMsg('Confira os números: pontos por R$ maior que zero e limites de cc em ordem crescente.', 'error'); return; }
+      const x = await client.from('app_settings').upsert([{ key: 'points_per_real', value: String(k) }, { key: 'moto_cc_max_1', value: String(l[0]) }, { key: 'moto_cc_max_2', value: String(l[1]) }, { key: 'moto_cc_max_3', value: String(l[2]) }]);
+      rwMsg(x.error ? friendly(x.error) : 'Regras salvas. Os pontos dos serviços por veículo já usam os novos valores.', x.error ? 'error' : 'success'); if (!x.error) loadRewards();
+    });
     $('valSave').addEventListener('click', async () => { const v = parseInt($('valDays').value, 10); if (!(v >= 30)) { rwMsg('Use pelo menos 30 dias.', 'error'); return; } const x = await client.from('app_settings').upsert({ key: 'points_validity_days', value: String(v) }); rwMsg(x.error ? friendly(x.error) : 'Validade salva: ' + v + ' dias para os próximos pontos.', x.error ? 'error' : 'success'); });
     async function loadRewards() {
-      const cfg = await client.from('app_settings').select('value').eq('key', 'points_validity_days').maybeSingle(); $('valDays').value = (cfg.data && cfg.data.value) || 365;
-      const { data, error } = await client.from('rewards').select('id,name,cost_points,active,image,price_small_cents,price_medium_cents,price_large_cents,black_extra_cents').order('cost_points'); const b = $('rewardAdmin'); clear(b);
+      const st = await client.from('app_settings').select('key,value'); const S = {}; (st.data || []).forEach(x => { S[x.key] = x.value; });
+      $('valDays').value = S.points_validity_days || 365; $('ptsPerReal').value = S.points_per_real || 4; $('ccLim1').value = S.moto_cc_max_1 || 160; $('ccLim2').value = S.moto_cc_max_2 || 350; $('ccLim3').value = S.moto_cc_max_3 || 600;
+      const L = [parseInt($('ccLim1').value, 10), parseInt($('ccLim2').value, 10), parseInt($('ccLim3').value, 10)];
+      const { data, error } = await client.from('rewards').select('id,name,cost_points,active,image,price_small_cents,price_medium_cents,price_large_cents,black_extra_cents,price_moto_cents,price_moto2_cents,price_moto3_cents,price_moto4_cents').order('cost_points'); const b = $('rewardAdmin'); clear(b);
       if (error) { rwMsg('Rode o SQL 008 para ativar os pontos.', 'error'); return; }
-      data.forEach(r => { const row = el('div', 'editrow'); const [f1, n] = textInput('Prêmio', r.name), [f2, c] = numInput('Custo (pts)', r.cost_points, '1', '1'), [f3, act] = checkInput('Ativo', r.active); const cents = x => x == null ? '' : (x / 100).toFixed(2); const [g1, ps] = numInput('Preço pequeno (R$)', cents(r.price_small_cents), '0.01'), [g2, pm] = numInput('Preço sedan (R$)', cents(r.price_medium_cents), '0.01'), [g3, pl] = numInput('Preço grande (R$)', cents(r.price_large_cents), '0.01'), [g4, pb] = numInput('Extra se preto (R$)', cents(r.black_extra_cents), '0.01'); const ff = el('div', 'field'); ff.appendChild(el('label', null, r.image ? 'Trocar foto' : 'Foto')); const fi = el('input'); fi.type = 'file'; fi.accept = 'image/*'; ff.appendChild(fi); const sv = el('button', 'secondary', 'Salvar'); sv.type = 'button';
+      data.forEach(r => { const row = el('div', 'editrow'); const [f1, n] = textInput('Prêmio', r.name), [f2, c] = numInput('Custo (pts)', r.cost_points, '1', '1'), [f3, act] = checkInput('Ativo', r.active); const cents = x => x == null ? '' : (x / 100).toFixed(2); const [g1, ps] = numInput('Preço pequeno (R$)', cents(r.price_small_cents), '0.01'), [g2, pm] = numInput('Preço sedan (R$)', cents(r.price_medium_cents), '0.01'), [g3, pl] = numInput('Preço grande (R$)', cents(r.price_large_cents), '0.01'), [g4, pb] = numInput('Extra se preto (R$)', cents(r.black_extra_cents), '0.01'), [g5, pmo] = numInput('Moto até ' + L[0] + ' cc (R$)', cents(r.price_moto_cents), '0.01'), [g6, pm2] = numInput('Moto ' + (L[0] + 1) + '–' + L[1] + ' cc (R$)', cents(r.price_moto2_cents), '0.01'), [g7, pm3] = numInput('Moto ' + (L[1] + 1) + '–' + L[2] + ' cc (R$)', cents(r.price_moto3_cents), '0.01'), [g8, pm4] = numInput('Moto acima de ' + L[2] + ' cc (R$)', cents(r.price_moto4_cents), '0.01'); const ff = el('div', 'field'); ff.appendChild(el('label', null, r.image ? 'Trocar foto' : 'Foto')); const fi = el('input'); fi.type = 'file'; fi.accept = 'image/*'; ff.appendChild(fi); const sv = el('button', 'secondary', 'Salvar'); sv.type = 'button';
         sv.addEventListener('click', async () => {
-          const mc = i => i.value === '' ? null : Math.round(parseFloat(i.value) * 100); const upd = { name: n.value.trim(), cost_points: parseInt(c.value, 10), active: act.checked, price_small_cents: mc(ps), price_medium_cents: mc(pm), price_large_cents: mc(pl), black_extra_cents: mc(pb) };
+          const mc = i => i.value === '' ? null : Math.round(parseFloat(i.value) * 100); const upd = { name: n.value.trim(), cost_points: parseInt(c.value, 10), active: act.checked, price_small_cents: mc(ps), price_medium_cents: mc(pm), price_large_cents: mc(pl), black_extra_cents: mc(pb), price_moto_cents: mc(pmo), price_moto2_cents: mc(pm2), price_moto3_cents: mc(pm3), price_moto4_cents: mc(pm4) };
           try { if (fi.files[0]) upd.image = await uploadRewardImage(r.id, fi.files[0]); } catch (e) { rwMsg('Erro na foto: ' + (e.message || e), 'error'); return; }
           const x = await client.from('rewards').update(upd).eq('id', r.id); rwMsg(x.error ? friendly(x.error) : 'Prêmio salvo.', x.error ? 'error' : 'success'); });
-        row.append(f1, f2, f3, g1, g2, g3, g4, ff, sv); b.appendChild(row); });
+        row.append(f1, f2, f3, g1, g2, g3, g4, g5, g6, g7, g8, ff, sv); b.appendChild(row); });
     }
     async function uploadRewardImage(id, file) {
       const path = id + '-' + Date.now() + '.jpg'; const up = await client.storage.from('reward-images').upload(path, await shrink(file), { contentType: 'image/jpeg', upsert: true });

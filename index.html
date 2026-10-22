@@ -167,7 +167,7 @@
       <div class="pfhead" data-pane="perfil"><div class="avatar"><svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='8' r='4'/><path d='M4 21a8 8 0 0 1 16 0'/></svg></div><div><strong id="pfHeadName">—</strong><span id="pfHeadMail"></span></div></div>
       <div class="seg" data-pane="perfil"><button type="button" data-s="dados" class="on">Meus dados</button><button type="button" data-s="veiculos">Veículos</button><button type="button" data-s="indicacao">Indicação</button></div>
       <article class="card" data-pane="perfil" data-sub="dados" style="margin-bottom:14px"><div class="eyebrow">Meus dados</div><form id="profileForm"><div class="field"><label for="pfFullName">Nome completo</label><input id="pfFullName" required></div><div class="field"><label for="pfEmail">E-mail</label><input id="pfEmail" disabled></div><div class="field"><label for="pfPhone">WhatsApp</label><input id="pfPhone" type="tel" inputmode="tel" placeholder="(53) 99999-9999"></div><button type="submit">Salvar dados</button></form><div id="pfStatus" class="status hidden"></div></article>
-      <div class="auth" data-pane="perfil"><article class="card" data-sub="veiculos"><h2>Meu veículo</h2><form id="vehicleForm"><div class="field"><label for="vehicleName">Marca e modelo</label><input id="vehicleName" required placeholder="Ex.: VW Nivus" /></div><div class="field"><label for="vehiclePlate">Placa</label><input id="vehiclePlate" required maxlength="8" placeholder="ABC1D23" autocapitalize="characters" /></div><div class="field"><label for="vehicleYear">Ano</label><input id="vehicleYear" type="number" inputmode="numeric" min="1950" max="2100" placeholder="Ex.: 2022" required /></div><div class="field"><label for="vehicleSize">Porte</label><select id="vehicleSize" required><option value="">Selecione</option><option value="pequeno">Pequeno (hatch/compacto, ex.: Palio)</option><option value="medio">Médio / sedan (ex.: Virtus)</option><option value="grande">Grande (caminhonete/SUV grande, ex.: Amarok)</option></select><span class="small">A oficina confirma o porte na avaliação.</span></div><div class="field"><label for="vehicleColor">Cor</label><select id="vehicleColor" required><option value="">Selecione</option><option>Preto</option><option>Branco</option><option>Prata</option><option>Cinza</option><option>Vermelho</option><option>Azul</option><option>Verde</option><option>Amarelo</option><option>Marrom</option><option>Outra</option></select></div><button type="submit">Salvar veículo</button></form><div id="vehicleStatus" class="status">Seus veículos aparecerão aqui.</div><div id="vehicleList"></div></article><article class="card" data-sub="dados"><h2>Mensalidades</h2><div id="paymentsList"></div><div id="paymentsStatus" class="status">Nenhum pagamento disponível.</div></article></div>
+      <div class="auth" data-pane="perfil"><article class="card" data-sub="veiculos"><h2>Meu veículo</h2><form id="vehicleForm"><div class="field"><label for="vehicleName">Marca e modelo</label><input id="vehicleName" required placeholder="Ex.: VW Nivus" /></div><div class="field"><label for="vehiclePlate">Placa</label><input id="vehiclePlate" required maxlength="8" placeholder="ABC1D23" autocapitalize="characters" /></div><div class="field"><label for="vehicleYear">Ano</label><input id="vehicleYear" type="number" inputmode="numeric" min="1950" max="2100" placeholder="Ex.: 2022" required /></div><div class="field"><label for="vehicleSize">Tipo / porte</label><select id="vehicleSize" required><option value="">Selecione</option><option value="pequeno">Pequeno (hatch/compacto, ex.: Palio)</option><option value="medio">Médio / sedan (ex.: Virtus)</option><option value="grande">Grande (caminhonete/SUV grande, ex.: Amarok)</option><option value="moto">Moto</option></select><span class="small">A oficina confirma o porte na avaliação.</span></div><div class="field hidden" id="ccField"><label for="vehicleCc">Cilindradas (cc)</label><input id="vehicleCc" type="number" inputmode="numeric" min="50" max="3000" placeholder="Ex.: 160" /></div><div class="field"><label for="vehicleColor">Cor</label><select id="vehicleColor" required><option value="">Selecione</option><option>Preto</option><option>Branco</option><option>Prata</option><option>Cinza</option><option>Vermelho</option><option>Azul</option><option>Verde</option><option>Amarelo</option><option>Marrom</option><option>Outra</option></select></div><button type="submit">Salvar veículo</button></form><div id="vehicleStatus" class="status">Seus veículos aparecerão aqui.</div><div id="vehicleList"></div></article><article class="card" data-sub="dados"><h2>Mensalidades</h2><div id="paymentsList"></div><div id="paymentsStatus" class="status">Nenhum pagamento disponível.</div></article></div>
       <article class="card" data-pane="servicos"><div class="eyebrow">Agenda</div><h2>Serviços programados</h2><div id="nextList"></div><div id="nextStatus" class="status">Carregando...</div></article>
       <article class="card" data-pane="servicos" style="margin-top:14px"><div class="eyebrow">Histórico</div><h2>Serviços realizados</h2><div id="historyList"></div><div id="historyStatus" class="status">Carregando...</div></article>
       <article class="card" data-pane="loja"><div class="eyebrow">Loja</div><h2>Troque seus pontos</h2><p class="small">Seu saldo: <b id="shopBal">0 pts</b>. Todos os serviços são realizados <b>mediante avaliação</b> do veículo.</p><div class="field"><label for="shopVehicle">Pontos para o veículo</label><select id="shopVehicle"></select><span id="shopVehNote" class="small"></span></div><div id="rewardList"></div><div id="rewardStatus" class="status hidden"></div></article>
@@ -197,6 +197,7 @@
       BENEFIT_NOT_AVAILABLE: 'Este benefício não está disponível (ciclo já usado ou mensalidade em atraso).',
       FORBIDDEN: 'Ação permitida apenas para quem tem acesso a este recurso.',
       NO_ACTIVE_SUBSCRIPTION: 'Nenhuma assinatura ativa encontrada.',
+      NOT_FOR_VEHICLE: 'Este serviço não está disponível para o tipo de veículo escolhido.',
       VEHICLE_REQUIRED: 'Vincule um veículo ao plano antes de gerar o código.',
       VEHICLE_REQUIRED: 'Cadastre seu veículo (Perfil > Veículos) para trocar este serviço.',
       INSUFFICIENT_POINTS: 'Você não tem pontos suficientes para este prêmio.',
@@ -314,7 +315,7 @@
       const days = sub?.started_at ? Math.max(0, Math.floor((Date.now() - new Date(sub.started_at).getTime()) / 86400000)) : 0;
       $('monthsActive').textContent = days + ' dias';
 
-      const { data: vehicles, error: vehicleError } = await client.from('vehicles').select('id,make_model,plate,color,created_at').order('created_at', { ascending: false });
+      const { data: vehicles, error: vehicleError } = await client.from('vehicles').select('id,make_model,plate,color,year,size_class,cc,created_at').order('created_at', { ascending: false });
       vehiclesCache = vehicles || [];
       const vl = $('vehicleList'); clear(vl);
       if (vehicleError) status('vehicleStatus', 'Não foi possível carregar veículos: ' + vehicleError.message, 'error');
@@ -322,7 +323,7 @@
       else {
         status('vehicleStatus', vehicles.length + ' veículo(s) cadastrado(s).', 'success');
         vehicles.forEach(v => {
-          const row = el('div', 'status row between'); row.appendChild(el('span', null, v.make_model + (v.year ? ' ' + v.year : '') + ' · ' + v.plate + (v.color ? ' · ' + v.color : '')));
+          const row = el('div', 'status row between'); row.appendChild(el('span', null, v.make_model + (v.year ? ' ' + v.year : '') + (v.cc ? ' · ' + v.cc + ' cc' : '') + ' · ' + v.plate + (v.color ? ' · ' + v.color : '')));
           if (sub && sub.vehicle_id === v.id) row.appendChild(el('span', 'tag available', 'Vinculado ao plano'));
           else if (sub) {
             const b = el('button', 'secondary', 'Vincular ao plano'); b.type = 'button';
@@ -354,17 +355,17 @@
       if (p && p.out_expiring_at) { const dd = new Date(p.out_expiring_at).toLocaleDateString('pt-BR'); $('expNote').textContent = 'Próximo vencimento: ' + dd; if (p.out_expiring > 0) h.appendChild(el('div', 'small ptsexp', 'Atenção: ' + p.out_expiring.toLocaleString('pt-BR') + ' pts vencem até ' + dd + '. Use antes!')); }
       ((p && p.out_history) || []).slice(0, 3).forEach(x => h.appendChild(el('div', 'small', (x.delta > 0 ? '+' : '') + x.delta + ' pts · ' + (REASON[x.reason] || x.reason) + ' · ' + new Date(x.at).toLocaleDateString('pt-BR'))));
       const { data: rw } = await client.from('rewards').select('id,name,description,cost_points,image,price_small_cents,price_medium_cents,price_large_cents').eq('active', true).order('cost_points'); const rl = $('rewardList'); clear(rl);
-      const { data: vh } = await client.from('vehicles').select('id,make_model,plate,year').eq('customer_id', uid0).order('created_at'); const sel = $('shopVehicle'), keep = sel.value; clear(sel);
+      const { data: vh } = await client.from('vehicles').select('id,make_model,plate,year,size_class,cc').eq('customer_id', uid0).order('created_at'); const sel = $('shopVehicle'), keep = sel.value; clear(sel);
       (vh || []).forEach(v => { const o = el('option', null, v.make_model + (v.year ? ' ' + v.year : '') + ' · ' + v.plate); o.value = v.id; sel.appendChild(o); }); if (keep && [...sel.options].some(o => o.value === keep)) sel.value = keep;
-      $('shopVehNote').textContent = (vh || []).length ? 'O preço em pontos de alguns serviços depende do porte e da cor do veículo.' : 'Cadastre seu veículo em Perfil > Veículos para ver os pontos de cada serviço.';
-      const vid = sel.value || null, costs = {}; if (vid) { const { data: cs } = await client.rpc('reward_costs_for_vehicle', { p_vehicle: vid }); (cs || []).forEach(x => { costs[x.out_reward] = x.out_points; }); }
+      $('shopVehNote').textContent = (vh || []).length ? 'O preço em pontos depende do tipo, porte e cor do veículo, e alguns serviços não existem para moto.' : 'Cadastre seu veículo em Perfil > Veículos para ver os pontos de cada serviço.';
+      const vid = sel.value || null, curV = (vh || []).find(v => v.id === vid), needCc = !!(curV && curV.size_class === 'moto' && !curV.cc), costs = {}; if (vid) { const { data: cs } = await client.rpc('reward_costs_for_vehicle', { p_vehicle: vid }); (cs || []).forEach(x => { costs[x.out_reward] = x.out_points; }); }
       (rw || []).forEach(r => {
         const IMG = /cristaliza/i.test(r.name) ? 'cristalizacao' : /far[oó]is|farol|revitaliza/i.test(r.name) ? 'farois' : /lavagem/i.test(r.name) ? 'lavagem' : /polimento.*(completo|t[eé]cnico)/i.test(r.name) ? 'polimento-completo' : /polimento/i.test(r.name) ? 'polimento' : /retoque|arranh/i.test(r.name) ? 'retoque' : null;
         const it = el('div', 'svc rw has-img'); const src = r.image || (IMG ? './premio-' + IMG + '.jpg' : null);
         if (src) { const im = el('img', 'rwimg'); im.alt = r.name; im.loading = 'lazy'; im.onerror = () => { im.replaceWith(el('div', 'rwimg ph')); }; im.src = src; it.appendChild(im); } else it.appendChild(el('div', 'rwimg ph'));
-        const variable = r.price_small_cents != null || r.price_medium_cents != null || r.price_large_cents != null; const cost = variable ? costs[r.id] : r.cost_points; const known = cost != null;
-        it.append(el('strong', null, r.name), el('div', 'small', (r.description || '') + (known ? ' · ' + cost.toLocaleString('pt-BR') + ' pts' : ' · informe seu veículo')));
-        const b = el('button', known && bal >= cost ? null : 'secondary', !known ? 'Escolha o veículo' : bal >= cost ? 'Trocar por ' + cost.toLocaleString('pt-BR') + ' pts' : 'Faltam ' + (cost - bal).toLocaleString('pt-BR') + ' pts'); b.type = 'button'; b.disabled = !known || bal < cost;
+        const cost = vid ? costs[r.id] : null; const known = cost != null && cost >= 0, na = cost != null && cost < 0;
+        it.append(el('strong', null, r.name), el('div', 'small', (r.description || '') + (needCc ? ' · falta informar as cilindradas' : known ? ' · ' + cost.toLocaleString('pt-BR') + ' pts' : na ? ' · indisponível para este veículo' : ' · informe seu veículo')));
+        const b = el('button', known && bal >= cost ? null : 'secondary', na ? 'Indisponível para este veículo' : !known ? (needCc ? 'Informe as cilindradas' : 'Escolha o veículo') : bal >= cost ? 'Trocar por ' + cost.toLocaleString('pt-BR') + ' pts' : 'Faltam ' + (cost - bal).toLocaleString('pt-BR') + ' pts'); b.type = 'button'; b.disabled = !known || bal < cost;
         b.addEventListener('click', async () => {
           if (!confirm('Trocar ' + cost + ' pontos por "' + r.name + '"? Os pontos só são descontados quando a oficina validar o código.')) return;
           const { data, error } = await client.rpc('redeem_reward', { p_reward: r.id, p_vehicle: vid }); const st = $('rewardStatus'); st.classList.remove('hidden'); clear(st); st.className = 'status';
@@ -448,15 +449,17 @@
     }
     $('loginBtn').addEventListener('click', () => runAuth('login'));
     $('signupBtn').addEventListener('click', () => runAuth('signup'));
+    $('vehicleSize').addEventListener('change', () => { const m = $('vehicleSize').value === 'moto'; $('ccField').classList.toggle('hidden', !m); $('vehicleCc').required = m; });
     $('vehicleForm').addEventListener('submit', async event => {
       event.preventDefault(); if (!client) { status('vehicleStatus', 'Configure o Supabase primeiro.', 'error'); return; }
       const { data: { user } } = await client.auth.getUser(); if (!user) { status('vehicleStatus', 'Entre na sua conta para salvar um veículo.', 'error'); return; }
       const plate = normPlate($('vehiclePlate').value);
       if (!PLATE.test(plate)) { status('vehicleStatus', 'Placa inválida. Use o formato ABC1D23 ou ABC1234.', 'error'); return; }
-      const payload = { customer_id: user.id, make_model: upper($('vehicleName').value), plate, color: upper($('vehicleColor').value || '') || null, year: parseInt($('vehicleYear').value, 10) || null, size_class: $('vehicleSize').value || null };
+      const payload = { customer_id: user.id, make_model: upper($('vehicleName').value), plate, color: upper($('vehicleColor').value || '') || null, year: parseInt($('vehicleYear').value, 10) || null, size_class: $('vehicleSize').value || null, cc: $('vehicleSize').value === 'moto' ? (parseInt($('vehicleCc').value, 10) || null) : null };
+      if (payload.size_class === 'moto' && !payload.cc) { status('vehicleStatus', 'Informe as cilindradas da moto (ex.: 160).', 'error'); return; }
       const { error } = await client.from('vehicles').insert(payload);
       if (error) { status('vehicleStatus', error.code === '23505' ? 'Esta placa já está cadastrada.' : error.message, 'error'); return; }
-      $('vehicleForm').reset(); status('vehicleStatus', 'Veículo salvo com sucesso.', 'success'); await refreshDashboard(user);
+      $('vehicleForm').reset(); $('vehicleSize').dispatchEvent(new Event('change')); status('vehicleStatus', 'Veículo salvo com sucesso.', 'success'); await refreshDashboard(user);
     });
     $('cancelSubBtn').addEventListener('click', async () => {
       if (!confirm('Cancelar sua assinatura? Os benefícios serão bloqueados e as cobranças futuras param.')) return;
